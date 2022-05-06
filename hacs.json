@@ -1,10 +1,8 @@
 {
-    "name": "Integration blueprint",
-    "hacs": "1.6.0",
-    "domains": [
-        "binary_sensor",
-        "sensor",
-        "switch"
-    ],
-    "homeassistant": "0.118.0"
+  "name": "FlexMeasure",
+  "hacs": "1.6.0",
+  "domains": ["binary_sensor", "sensor", "switch"],
+  "iot_class": "calculated",
+  "homeassistant": "2022.5.0",
+  "render_readme": true
 }
