@@ -1,0 +1,10 @@
+{
+  "domain": "flexmeasure",
+  "name": "FlexMeasure",
+  "documentation": "https://github.com/custom-components/ha-flexmeasure",
+  "iot_class": "calculated",
+  "issue_tracker": "https://github.com/custom-components/ha-flexmeasure/issues",
+  "version": "0.0.1",
+  "config_flow": true,
+  "codeowners": ["@danieldotnl"]
+}

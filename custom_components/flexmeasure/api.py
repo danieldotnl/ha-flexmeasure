@@ -1,10 +1,12 @@
 """Sample API Client."""
-import logging
 import asyncio
+import logging
 import socket
-from typing import Optional
+
 import aiohttp
 import async_timeout
+
+# from typing import Optional
 
 TIMEOUT = 10
 
