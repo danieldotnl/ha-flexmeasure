@@ -1,9 +1,11 @@
 """Adds config flow for Blueprint."""
 import voluptuous as vol
 from homeassistant import config_entries
+from homeassistant.helpers import selector
 
-from .const import CONF_PASSWORD
-from .const import CONF_USERNAME
+from .const import CONF_EXPRESSION
+from .const import CONF_SOURCE
+from .const import CONF_TARGET
 from .const import DOMAIN
 
 
@@ -32,7 +34,7 @@ class FlexMeasureFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             # )
             if valid:
                 return self.async_create_entry(
-                    title=user_input[CONF_USERNAME], data=user_input
+                    title=user_input[CONF_TARGET], data=user_input
                 )
             else:
                 self._errors["base"] = "auth"
@@ -40,9 +42,6 @@ class FlexMeasureFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return await self._show_config_form(user_input)
 
         user_input = {}
-        # Provide defaults for form
-        user_input[CONF_USERNAME] = ""
-        user_input[CONF_PASSWORD] = ""
 
         return await self._show_config_form(user_input)
 
@@ -57,8 +56,9 @@ class FlexMeasureFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_USERNAME, default=user_input[CONF_USERNAME]): str,
-                    vol.Required(CONF_PASSWORD, default=user_input[CONF_PASSWORD]): str,
+                    vol.Required(CONF_SOURCE): selector.EntitySelector(),
+                    vol.Optional(CONF_EXPRESSION): selector.TemplateSelector(),
+                    vol.Required(CONF_TARGET): selector.TextSelector(),
                 }
             ),
             errors=self._errors,

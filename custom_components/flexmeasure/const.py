@@ -22,8 +22,9 @@ PLATFORMS = [BINARY_SENSOR, SENSOR, SWITCH]
 
 # Configuration and options
 CONF_ENABLED = "enabled"
-CONF_USERNAME = "username"
-CONF_PASSWORD = "password"
+CONF_SOURCE = "Source sensor"
+CONF_EXPRESSION = "Activator expression"
+CONF_TARGET = "Target sensor name"
 
 # Defaults
 DEFAULT_NAME = DOMAIN
