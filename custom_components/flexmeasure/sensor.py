@@ -2,19 +2,17 @@
 from homeassistant.components.sensor import SensorEntity
 
 from .const import DEFAULT_NAME
-from .const import DOMAIN
 from .const import ICON
 from .const import SENSOR
-from .entity import IntegrationBlueprintEntity
+from .entity import FlexMeasureEntity
 
 
 async def async_setup_entry(hass, entry, async_add_devices):
     """Setup sensor platform."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_devices([IntegrationBlueprintSensor(coordinator, entry)])
+    async_add_devices([FlexMeasureSensor(entry)])
 
 
-class IntegrationBlueprintSensor(IntegrationBlueprintEntity, SensorEntity):
+class FlexMeasureSensor(FlexMeasureEntity, SensorEntity):
     """integration_blueprint Sensor class."""
 
     @property
@@ -25,7 +23,7 @@ class IntegrationBlueprintSensor(IntegrationBlueprintEntity, SensorEntity):
     @property
     def native_value(self):
         """Return the native value of the sensor."""
-        return self.coordinator.data.get("body")
+        return "test_native_value"
 
     @property
     def icon(self):

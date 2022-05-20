@@ -1,15 +1,12 @@
-"""BlueprintEntity class"""
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
-
+"""FlexMeasure class"""
 from .const import ATTRIBUTION
 from .const import DOMAIN
 from .const import NAME
 from .const import VERSION
 
 
-class IntegrationBlueprintEntity(CoordinatorEntity):
-    def __init__(self, coordinator, config_entry):
-        super().__init__(coordinator)
+class FlexMeasureEntity:
+    def __init__(self, config_entry):
         self.config_entry = config_entry
 
     @property
@@ -31,6 +28,5 @@ class IntegrationBlueprintEntity(CoordinatorEntity):
         """Return the state attributes."""
         return {
             "attribution": ATTRIBUTION,
-            "id": str(self.coordinator.data.get("id")),
             "integration": DOMAIN,
         }
