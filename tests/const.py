@@ -1,6 +1,11 @@
 """Constants for integration_blueprint tests."""
-from custom_components.flexmeasure.const import CONF_PASSWORD
-from custom_components.flexmeasure.const import CONF_USERNAME
+from custom_components.flexmeasure.const import CONF_EXPRESSION
+from custom_components.flexmeasure.const import CONF_SOURCE
+from custom_components.flexmeasure.const import CONF_TARGET
 
 # Mock config data to be used across multiple tests
-MOCK_CONFIG = {CONF_USERNAME: "test_username", CONF_PASSWORD: "test_password"}
+MOCK_CONFIG = {
+    CONF_SOURCE: "sun.sun",
+    CONF_EXPRESSION: "test_expression",
+    CONF_TARGET: "test_target",
+}
