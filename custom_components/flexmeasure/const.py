@@ -16,9 +16,11 @@ BINARY_SENSOR_DEVICE_CLASS = "connectivity"
 # Platforms
 BINARY_SENSOR = "binary_sensor"
 SENSOR = "sensor"
-SWITCH = "switch"
 PLATFORMS = [SENSOR]
 
+# Services
+SERVICE_START = "Start"
+SERVICE_STOP = "Stop"
 
 # Configuration and options
 CONF_ENABLED = "enabled"
@@ -29,9 +31,9 @@ CONF_TARGET = "Target sensor name"
 # Defaults
 DEFAULT_NAME = DOMAIN
 
+# Statuses
 STATUS_MEASURING = "Measuring"
 STATUS_INACTIVE = "Inactive"
-
 STATUSES = [STATUS_MEASURING, STATUS_INACTIVE]
 
 
