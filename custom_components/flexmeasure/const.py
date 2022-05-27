@@ -8,7 +8,7 @@ ATTRIBUTION = "Data provided by http://jsonplaceholder.typicode.com/"
 ISSUE_URL = "https://github.com/custom-components/ha-flexmeasure/issues"
 
 # Icons
-ICON = "mdi:format-quote-close"
+ICON = "mdi:measure"
 
 # Device classes
 BINARY_SENSOR_DEVICE_CLASS = "connectivity"
@@ -28,6 +28,11 @@ CONF_TARGET = "Target sensor name"
 
 # Defaults
 DEFAULT_NAME = DOMAIN
+
+STATUS_MEASURING = "Measuring"
+STATUS_INACTIVE = "Inactive"
+
+STATUSES = [STATUS_MEASURING, STATUS_INACTIVE]
 
 
 STARTUP_MESSAGE = f"""

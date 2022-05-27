@@ -1,31 +1,65 @@
-"""Sensor platform for integration_blueprint."""
-from homeassistant.components.sensor import SensorEntity
+"""Sensor platform for FlexMeasure. Code partially based on/inspired by the HA utility meter."""
+from __future__ import annotations
 
-from .const import DEFAULT_NAME
+import logging
+
+from custom_components.flexmeasure.const import DOMAIN_DATA
+from homeassistant.components.sensor import (
+    RestoreSensor,
+)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+from .const import CONF_SOURCE
+from .const import CONF_TARGET
 from .const import ICON
 from .const import SENSOR
-from .entity import FlexMeasureEntity
 
 
-async def async_setup_entry(hass, entry, async_add_devices):
+_LOGGER: logging.Logger = logging.getLogger(__package__)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Setup sensor platform."""
-    async_add_devices([FlexMeasureSensor(entry)])
+    entry_id = config_entry.entry_id
+    registry = er.async_get(hass)
+    # Validate + resolve entity registry id to entity_id
+    source_entity_id = er.async_validate_entity_id(
+        registry, config_entry.options[CONF_SOURCE]
+    )
+    target_sensor_name = config_entry.options[CONF_TARGET]
+
+    sensor = FlexMeasureSensor(entry_id, source_entity_id, target_sensor_name)
+    hass.data[DOMAIN_DATA][entry_id][SENSOR] = sensor
+    async_add_entities([sensor])
 
 
-class FlexMeasureSensor(FlexMeasureEntity, SensorEntity):
+class FlexMeasureSensor(RestoreSensor):
     """integration_blueprint Sensor class."""
 
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{DEFAULT_NAME}_{SENSOR}"
+    def __init__(self, entry_id, source_entity_id, sensor_name):
+        self.source_sensor_id = source_entity_id
+        self._attr_name = sensor_name
+        self._unit_of_measurement = None
+        self._attr_unique_id = entry_id
 
-    @property
-    def native_value(self):
-        """Return the native value of the sensor."""
-        return "test_native_value"
+        self._collecting = None
+        self._state = None
+        self._attr_native_value = None
+        self._attr_icon = ICON
 
-    @property
-    def icon(self):
-        """Return the icon of the sensor."""
-        return ICON
+    async def async_added_to_hass(self):
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+
+    def start_measuring(self, event):
+        _LOGGER.debug("(Re)START measuring %s. Event: %s", self.source_sensor_id, event)
+
+    def stop_measuring(self, event):
+        _LOGGER.debug("(Re)STOP measuring %s. Event: %s", self.source_sensor_id, event)

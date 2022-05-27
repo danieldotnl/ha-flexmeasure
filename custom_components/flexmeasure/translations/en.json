@@ -5,8 +5,9 @@
         "title": "FlexMeasure",
         "description": "If you need help with the configuration have a look here: https://github.com/danieldotnl/ha-flexmeasure",
         "data": {
+          "name": "Config name",
           "Source sensor": "Source sensor",
-          "Activator expression": "Activator expression (optional)",
+          "Activator expression": "Activator expression (not yet supported)",
           "Target sensor name": "Target sensor name"
         }
       }
