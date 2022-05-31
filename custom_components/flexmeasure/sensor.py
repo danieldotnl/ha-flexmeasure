@@ -71,7 +71,7 @@ async def async_setup_entry(
 
 
 class FlexMeasureSourceSensor(RestoreSensor):
-    """integration_blueprint Sensor class."""
+    """FlexMeasure Source Sensor class."""
 
     def __init__(self, entry_id, source_entity_id, sensor_name):
         self.source_sensor_id = source_entity_id
@@ -126,7 +126,7 @@ class FlexMeasureSourceSensor(RestoreSensor):
 
 
 class FlexMeasureTimeSensor(RestoreSensor):
-    """integration_blueprint Sensor class."""
+    """FlexMeasure Time Sensor class."""
 
     def __init__(self, entry_id, source_entity_id, sensor_name):
         self.source_sensor_id = source_entity_id

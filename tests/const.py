@@ -1,4 +1,4 @@
-"""Constants for integration_blueprint tests."""
+"""Constants for flexmeasure tests."""
 from custom_components.flexmeasure.const import CONF_EXPRESSION
 from custom_components.flexmeasure.const import CONF_SOURCE
 from custom_components.flexmeasure.const import CONF_TARGET
