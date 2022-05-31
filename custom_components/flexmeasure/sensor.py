@@ -7,23 +7,25 @@ from decimal import DecimalException
 
 import homeassistant.util.dt as dt_util
 from custom_components.flexmeasure.const import CONF_SENSOR_TYPE
-from custom_components.flexmeasure.const import DOMAIN_DATA
 from homeassistant.components.sensor import (
     RestoreSensor,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.core import callback
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.event import async_track_template_result
+from homeassistant.helpers.event import TrackTemplate
+from homeassistant.helpers.template import Template
 
 from .const import CONF_SOURCE
 from .const import CONF_TARGET
 from .const import CONF_TEMPLATE
 from .const import ICON
-from .const import SENSOR
 from .const import SENSOR_TYPE_SOURCE
 from .const import SENSOR_TYPE_TIME
 from .const import SERVICE_START
@@ -45,9 +47,15 @@ async def async_setup_entry(
     sensor_type: str = config_entry.options[CONF_SENSOR_TYPE]
     target_sensor_name: str = config_entry.options[CONF_TARGET]
     template: str | None = config_entry.options.get(CONF_TEMPLATE)
+    activation_template: Template | None = None
+
+    if template:
+        activation_template = Template(template)
 
     if sensor_type == SENSOR_TYPE_TIME:
-        sensor = FlexMeasureTimeSensor(entry_id, target_sensor_name, template)
+        sensor = FlexMeasureTimeSensor(
+            entry_id, target_sensor_name, activation_template
+        )
 
     elif sensor_type == SENSOR_TYPE_SOURCE:
         registry = er.async_get(hass)
@@ -57,10 +65,9 @@ async def async_setup_entry(
         )
 
         sensor = FlexMeasureSourceSensor(
-            entry_id, target_sensor_name, template, source_entity_id
+            entry_id, target_sensor_name, activation_template, source_entity_id
         )
 
-    hass.data[DOMAIN_DATA][entry_id][SENSOR] = sensor
     async_add_entities([sensor])
 
     platform = entity_platform.async_get_current_platform()
@@ -78,14 +85,10 @@ async def async_setup_entry(
     )
 
 
-class FlexMeasureSourceSensor(RestoreSensor):
-    """FlexMeasure Source Sensor class."""
-
-    def __init__(self, entry_id, sensor_name, template, source_entity_id):
-        self._source_sensor_id = source_entity_id
+class FlexMeasureSensor(RestoreSensor):
+    def __init__(self, entry_id, sensor_name, template):
         self._template = template
         self._attr_name = sensor_name
-        self._unit_of_measurement = None
         self._attr_unique_id = entry_id
 
         self._tracking = None
@@ -93,6 +96,54 @@ class FlexMeasureSourceSensor(RestoreSensor):
         self._current_source_value = None
         self._attr_native_value = 0
         self._attr_icon = ICON
+
+    async def async_added_to_hass(self):
+        @callback
+        def _async_on_template_update(event, updates):
+            """Update ha state when dependencies update."""
+            result = updates.pop().result
+
+            if isinstance(result, TemplateError):
+                _LOGGER.error(
+                    "Encountered a template error: %s. If we were measuring, we will now stop doing so.",
+                    result,
+                )
+                self.stop_measuring()
+            else:
+                _LOGGER.debug("Template value changed into: %s", result)
+                if result is True:
+                    self.start_measuring()
+                else:
+                    self.stop_measuring()
+
+            if event:
+                self.async_set_context(event.context)
+
+            self.async_schedule_update_ha_state(True)
+
+        if self._template is not None:
+            result = async_track_template_result(
+                self.hass,
+                [TrackTemplate(self._template, None)],
+                _async_on_template_update,
+            )
+            self.hass.bus.async_listen_once(
+                EVENT_HOMEASSISTANT_START, callback(lambda _: result.async_refresh())
+            )
+            result.async_refresh()
+
+            self.async_on_remove(result.async_remove)
+
+
+class FlexMeasureSourceSensor(FlexMeasureSensor):
+    """FlexMeasure Source Sensor class."""
+
+    def __init__(self, entry_id, sensor_name, template, source_entity_id):
+        super().__init__(entry_id, sensor_name, template)
+        self._source_sensor_id = source_entity_id
+
+        self._start_source_value = None
+        self._current_source_value = None
 
     def start_measuring(self, **kwargs):
         self._start_source_value = self.hass.states.get(self._source_sensor_id).state
@@ -102,54 +153,30 @@ class FlexMeasureSourceSensor(RestoreSensor):
             self._start_source_value,
         )
 
-        self._tracking = async_track_state_change_event(
-            self.hass, [self._source_sensor_id], self.async_reading
-        )
+    def stop_measuring(self, **kwargs):
+        try:
 
-    async def stop_measuring(self, **kwargs):
-        self._current_source_value = self.hass.states.get(self._source_sensor_id).state
+            self._current_source_value = Decimal(
+                self.hass.states.get(self._source_sensor_id).state
+            )
+            diff = self._current_source_value - self._attr_native_value
+            self._attr_native_value = self._attr_native_value + diff
+
+            self.async_write_ha_state()
+        except DecimalException as err:
+            _LOGGER.error("Could not convert sensor value to decimal: %s", err)
+
         _LOGGER.debug(
             "(Re)STOPPED measuring %s at value: %s",
             self._source_sensor_id,
             self._current_source_value,
         )
-        self._tracking()
-
-    @callback
-    def async_reading(self, event):
-        """Handle the sensor state changes."""
-
-        try:
-
-            old_state = Decimal(event.data.get("old_state").state)
-            new_state = Decimal(event.data.get("new_state").state)
-
-            diff = new_state - old_state
-            self._attr_native_value = self._attr_native_value + diff
-
-            _LOGGER.debug("Old state: %s, new state: %s", old_state, new_state)
-
-            self.async_write_ha_state()
-        except DecimalException as err:
-            _LOGGER.error("Invalid adjustment of %s: %s", new_state.state, err)
 
 
-class FlexMeasureTimeSensor(RestoreSensor):
+class FlexMeasureTimeSensor(FlexMeasureSensor):
     """FlexMeasure Time Sensor class."""
 
-    def __init__(self, entry_id, sensor_name, template):
-        self._template = template
-        self._attr_name = sensor_name
-        self._unit_of_measurement = None
-        self._attr_unique_id = entry_id
-
-        self._tracking = None
-        self._start_source_value = None
-        self._current_source_value = None
-        self._attr_native_value = 0
-        self._attr_icon = ICON
-
-    async def start_measuring(self):
+    def start_measuring(self):
         self._tracking = STATUS_MEASURING
         self._start_source_value = dt_util.as_timestamp(dt_util.now())
         _LOGGER.debug(
@@ -157,9 +184,9 @@ class FlexMeasureTimeSensor(RestoreSensor):
             self._start_source_value,
         )
 
-    async def stop_measuring(self):
+    def stop_measuring(self):
         if self._tracking == STATUS_MEASURING:
-            diff = dt_util.as_timestamp(dt_util.now()) - self._start_source_value
+            diff = round(dt_util.as_timestamp(dt_util.now()) - self._start_source_value)
             self._attr_native_value = self._attr_native_value + diff
             self._tracking = STATUS_INACTIVE
 
@@ -167,3 +194,5 @@ class FlexMeasureTimeSensor(RestoreSensor):
                 "(Re)STOPPED measuring time at value: %s",
                 self._attr_native_value,
             )
+        else:
+            _LOGGER.warning("Stop measuring triggered, but sensor wasn't measuring.")
