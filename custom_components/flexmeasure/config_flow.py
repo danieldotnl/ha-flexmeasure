@@ -12,13 +12,22 @@ from homeassistant.helpers.schema_config_entry_flow import SchemaConfigFlowHandl
 from homeassistant.helpers.schema_config_entry_flow import SchemaFlowFormStep
 from homeassistant.helpers.schema_config_entry_flow import SchemaFlowMenuStep
 
+from .const import CONF_SENSOR_TYPE
 from .const import CONF_SOURCE
 from .const import CONF_TARGET
 from .const import DOMAIN
 
+SENSOR_TYPES = [
+    selector.SelectOptionDict(value="time", label="Time sensor"),
+    selector.SelectOptionDict(value="source", label="Source sensor"),
+]
+
 CONFIG_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME): selector.TextSelector(),
+        vol.Required(CONF_SENSOR_TYPE, default="source"): selector.SelectSelector(
+            selector.SelectSelectorConfig(options=SENSOR_TYPES),
+        ),
         vol.Required(CONF_SOURCE): selector.EntitySelector(),
         vol.Required(CONF_TARGET): selector.TextSelector(),
     }

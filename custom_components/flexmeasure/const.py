@@ -18,15 +18,18 @@ BINARY_SENSOR = "binary_sensor"
 SENSOR = "sensor"
 PLATFORMS = [SENSOR]
 
+
 # Services
 SERVICE_START = "Start"
 SERVICE_STOP = "Stop"
 
 # Configuration and options
 CONF_ENABLED = "enabled"
+CONF_SENSOR_TYPE = "Sensor type"
 CONF_SOURCE = "Source sensor"
 CONF_EXPRESSION = "Activator expression"
 CONF_TARGET = "Target sensor name"
+
 
 # Defaults
 DEFAULT_NAME = DOMAIN

@@ -5,6 +5,8 @@ import logging
 from decimal import Decimal
 from decimal import DecimalException
 
+import homeassistant.util.dt as dt_util
+from custom_components.flexmeasure.const import CONF_SENSOR_TYPE
 from custom_components.flexmeasure.const import DOMAIN_DATA
 from homeassistant.components.sensor import (
     RestoreSensor,
@@ -23,6 +25,8 @@ from .const import ICON
 from .const import SENSOR
 from .const import SERVICE_START
 from .const import SERVICE_STOP
+from .const import STATUS_INACTIVE
+from .const import STATUS_MEASURING
 
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
@@ -41,8 +45,13 @@ async def async_setup_entry(
         registry, config_entry.options[CONF_SOURCE]
     )
     target_sensor_name = config_entry.options[CONF_TARGET]
+    sensor_type = config_entry.options[CONF_SENSOR_TYPE]
 
-    sensor = FlexMeasureSensor(entry_id, source_entity_id, target_sensor_name)
+    if sensor_type == "time":
+        sensor = FlexMeasureTimeSensor(entry_id, source_entity_id, target_sensor_name)
+    else:
+        sensor = FlexMeasureSourceSensor(entry_id, source_entity_id, target_sensor_name)
+
     hass.data[DOMAIN_DATA][entry_id][SENSOR] = sensor
     async_add_entities([sensor])
 
@@ -61,7 +70,7 @@ async def async_setup_entry(
     )
 
 
-class FlexMeasureSensor(RestoreSensor):
+class FlexMeasureSourceSensor(RestoreSensor):
     """integration_blueprint Sensor class."""
 
     def __init__(self, entry_id, source_entity_id, sensor_name):
@@ -114,3 +123,38 @@ class FlexMeasureSensor(RestoreSensor):
             self.async_write_ha_state()
         except DecimalException as err:
             _LOGGER.error("Invalid adjustment of %s: %s", new_state.state, err)
+
+
+class FlexMeasureTimeSensor(RestoreSensor):
+    """integration_blueprint Sensor class."""
+
+    def __init__(self, entry_id, source_entity_id, sensor_name):
+        self.source_sensor_id = source_entity_id
+        self._attr_name = sensor_name
+        self._unit_of_measurement = None
+        self._attr_unique_id = entry_id
+
+        self._tracking = None
+        self._start_source_value = None
+        self._current_source_value = None
+        self._attr_native_value = 0
+        self._attr_icon = ICON
+
+    async def start_measuring(self):
+        self._tracking = STATUS_MEASURING
+        self._start_source_value = dt_util.as_timestamp(dt_util.now())
+        _LOGGER.debug(
+            "(Re)START measuring time at value: %s",
+            self._start_source_value,
+        )
+
+    async def stop_measuring(self):
+        if self._tracking == STATUS_MEASURING:
+            diff = dt_util.as_timestamp(dt_util.now()) - self._start_source_value
+            self._attr_native_value = self._attr_native_value + diff
+            self._tracking = STATUS_INACTIVE
+
+            _LOGGER.debug(
+                "(Re)STOPPED measuring time at value: %s",
+                self._attr_native_value,
+            )
