@@ -21,8 +21,11 @@ from homeassistant.helpers.event import async_track_state_change_event
 
 from .const import CONF_SOURCE
 from .const import CONF_TARGET
+from .const import CONF_TEMPLATE
 from .const import ICON
 from .const import SENSOR
+from .const import SENSOR_TYPE_SOURCE
+from .const import SENSOR_TYPE_TIME
 from .const import SERVICE_START
 from .const import SERVICE_STOP
 from .const import STATUS_INACTIVE
@@ -38,19 +41,24 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Setup sensor platform."""
-    entry_id = config_entry.entry_id
-    registry = er.async_get(hass)
-    # Validate + resolve entity registry id to entity_id
-    source_entity_id = er.async_validate_entity_id(
-        registry, config_entry.options[CONF_SOURCE]
-    )
-    target_sensor_name = config_entry.options[CONF_TARGET]
-    sensor_type = config_entry.options[CONF_SENSOR_TYPE]
+    entry_id: str = config_entry.entry_id
+    sensor_type: str = config_entry.options[CONF_SENSOR_TYPE]
+    target_sensor_name: str = config_entry.options[CONF_TARGET]
+    template: str | None = config_entry.options.get(CONF_TEMPLATE)
 
-    if sensor_type == "time":
-        sensor = FlexMeasureTimeSensor(entry_id, source_entity_id, target_sensor_name)
-    else:
-        sensor = FlexMeasureSourceSensor(entry_id, source_entity_id, target_sensor_name)
+    if sensor_type == SENSOR_TYPE_TIME:
+        sensor = FlexMeasureTimeSensor(entry_id, target_sensor_name, template)
+
+    elif sensor_type == SENSOR_TYPE_SOURCE:
+        registry = er.async_get(hass)
+        # Validate + resolve entity registry id to entity_id
+        source_entity_id = er.async_validate_entity_id(
+            registry, config_entry.options[CONF_SOURCE]
+        )
+
+        sensor = FlexMeasureSourceSensor(
+            entry_id, target_sensor_name, template, source_entity_id
+        )
 
     hass.data[DOMAIN_DATA][entry_id][SENSOR] = sensor
     async_add_entities([sensor])
@@ -73,8 +81,9 @@ async def async_setup_entry(
 class FlexMeasureSourceSensor(RestoreSensor):
     """FlexMeasure Source Sensor class."""
 
-    def __init__(self, entry_id, source_entity_id, sensor_name):
-        self.source_sensor_id = source_entity_id
+    def __init__(self, entry_id, sensor_name, template, source_entity_id):
+        self._source_sensor_id = source_entity_id
+        self._template = template
         self._attr_name = sensor_name
         self._unit_of_measurement = None
         self._attr_unique_id = entry_id
@@ -86,22 +95,22 @@ class FlexMeasureSourceSensor(RestoreSensor):
         self._attr_icon = ICON
 
     def start_measuring(self, **kwargs):
-        self._start_source_value = self.hass.states.get(self.source_sensor_id).state
+        self._start_source_value = self.hass.states.get(self._source_sensor_id).state
         _LOGGER.debug(
             "(Re)START measuring %s at value: %s",
-            self.source_sensor_id,
+            self._source_sensor_id,
             self._start_source_value,
         )
 
         self._tracking = async_track_state_change_event(
-            self.hass, [self.source_sensor_id], self.async_reading
+            self.hass, [self._source_sensor_id], self.async_reading
         )
 
     async def stop_measuring(self, **kwargs):
-        self._current_source_value = self.hass.states.get(self.source_sensor_id).state
+        self._current_source_value = self.hass.states.get(self._source_sensor_id).state
         _LOGGER.debug(
             "(Re)STOPPED measuring %s at value: %s",
-            self.source_sensor_id,
+            self._source_sensor_id,
             self._current_source_value,
         )
         self._tracking()
@@ -128,8 +137,8 @@ class FlexMeasureSourceSensor(RestoreSensor):
 class FlexMeasureTimeSensor(RestoreSensor):
     """FlexMeasure Time Sensor class."""
 
-    def __init__(self, entry_id, source_entity_id, sensor_name):
-        self.source_sensor_id = source_entity_id
+    def __init__(self, entry_id, sensor_name, template):
+        self._template = template
         self._attr_name = sensor_name
         self._unit_of_measurement = None
         self._attr_unique_id = entry_id

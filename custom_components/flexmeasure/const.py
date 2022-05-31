@@ -27,8 +27,11 @@ SERVICE_STOP = "Stop"
 CONF_ENABLED = "enabled"
 CONF_SENSOR_TYPE = "Sensor type"
 CONF_SOURCE = "Source sensor"
-CONF_EXPRESSION = "Activator expression"
+CONF_TEMPLATE = "Activation template"
 CONF_TARGET = "Target sensor name"
+
+SENSOR_TYPE_TIME = "time"
+SENSOR_TYPE_SOURCE = "source"
 
 
 # Defaults

@@ -4,10 +4,26 @@
       "user": {
         "title": "FlexMeasure",
         "description": "If you need help with the configuration have a look here: https://github.com/danieldotnl/ha-flexmeasure",
+        "menu_options": {
+          "source": "Source sensor",
+          "time": "Time sensor"
+        }
+      },
+      "source": {
+        "title": "FlexMeasure",
+        "description": "If you need help with the configuration have a look here: https://github.com/danieldotnl/ha-flexmeasure",
         "data": {
-          "name": "Config name",
           "Source sensor": "Source sensor",
-          "Activator expression": "Activator expression (not yet supported)",
+          "Activation template": "Activation template",
+          "Target sensor name": "Target sensor name"
+        }
+      },
+      "time": {
+        "title": "FlexMeasure",
+        "description": "If you need help with the configuration have a look here: https://github.com/danieldotnl/ha-flexmeasure",
+        "data": {
+          "Source sensor": "Source sensor",
+          "Activation template": "Activation template",
           "Target sensor name": "Target sensor name"
         }
       }

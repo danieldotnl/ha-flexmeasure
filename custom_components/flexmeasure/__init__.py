@@ -8,14 +8,11 @@ Code partially based on/inspired by the HA utility meter.
 import logging
 from datetime import timedelta
 
-import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import Config
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
 
-from .const import CONF_SOURCE
 from .const import DOMAIN_DATA
 
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -30,20 +27,8 @@ async def async_setup(hass: HomeAssistant, config: Config):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up this integration using UI."""
-
-    entity_registry = er.async_get(hass)
     hass.data[DOMAIN_DATA] = {}
     hass.data[DOMAIN_DATA][entry.entry_id] = {}
-
-    try:
-        er.async_validate_entity_id(entity_registry, entry.options[CONF_SOURCE])
-    except vol.Invalid:
-        # The entity is identified by an unknown entity registry ID
-        _LOGGER.error(
-            "Failed to setup FlexMeasure for unknown entity %s",
-            entry.options[CONF_SOURCE],
-        )
-        return False
 
     hass.config_entries.async_setup_platforms(entry, ([Platform.SENSOR]))
 
