@@ -1,11 +1,25 @@
 """Constants for flexmeasure tests."""
+from custom_components.flexmeasure.const import CONF_SENSOR_TYPE
 from custom_components.flexmeasure.const import CONF_SOURCE
 from custom_components.flexmeasure.const import CONF_TARGET
 from custom_components.flexmeasure.const import CONF_TEMPLATE
+from custom_components.flexmeasure.const import SENSOR_TYPE_TIME
 
 # Mock config data to be used across multiple tests
-MOCK_CONFIG = {
+MOCK_TIME_CONFIG_FORM = {
+    CONF_TEMPLATE: "test_template",
+    CONF_TARGET: "test_target",
+}
+
+MOCK_TIME_CONFIG_FINAL = {
+    CONF_TEMPLATE: "test_template",
+    CONF_TARGET: "test_target",
+    CONF_SENSOR_TYPE: SENSOR_TYPE_TIME,
+}
+
+MOCK_SOURCE_CONFIG = {
     CONF_SOURCE: "sun.sun",
     CONF_TEMPLATE: "test_template",
     CONF_TARGET: "test_target",
+    CONF_SENSOR_TYPE: SENSOR_TYPE_TIME,
 }

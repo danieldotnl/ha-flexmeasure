@@ -2,6 +2,7 @@ from datetime import datetime
 from datetime import timedelta
 from datetime import timezone
 
+import homeassistant.util.dt as dt_util
 import pytest
 from custom_components.flexmeasure.timebox import Timebox
 
@@ -80,3 +81,13 @@ def test_daylight_savings(timebox):
     timebox.stop(fake_now.timestamp())
 
     assert timebox._box_state == 1200
+
+
+def test_hass_dt(timebox):
+    fake_now = dt_util.utcnow()
+    timebox.start(fake_now.timestamp())
+
+    fake_now += timedelta(days=2)
+    timebox.stop(fake_now.timestamp())
+
+    assert timebox._box_state == 172800

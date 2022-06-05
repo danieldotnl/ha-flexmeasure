@@ -6,7 +6,8 @@ from custom_components.flexmeasure.const import DOMAIN
 from homeassistant import config_entries
 from homeassistant import data_entry_flow
 
-from .const import MOCK_CONFIG
+from .const import MOCK_TIME_CONFIG_FINAL
+from .const import MOCK_TIME_CONFIG_FORM
 
 # from pytest_homeassistant_custom_component.common import MockConfigEntry
 
@@ -38,17 +39,23 @@ async def test_successful_config_flow(hass):
     assert result["type"] == data_entry_flow.RESULT_TYPE_MENU
     assert result["step_id"] == "user"
 
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "time"}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+
     # If a user were to enter `test_username` for username and `test_password`
     # for password, it would result in this function call
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=MOCK_CONFIG
+        result["flow_id"], user_input=MOCK_TIME_CONFIG_FORM
     )
 
     # Check that the config flow is complete and a new entry is created with
     # the input data
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "test_target"
-    assert result["data"] == MOCK_CONFIG
+    assert result["options"] == MOCK_TIME_CONFIG_FINAL
     assert result["result"]
 
 

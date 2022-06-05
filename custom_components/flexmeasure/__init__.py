@@ -31,11 +31,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     hass.config_entries.async_setup_platforms(entry, ([Platform.SENSOR]))
 
-    entry.async_on_unload(entry.add_update_listener(config_entry_update_listener))
+    entry.async_on_unload(entry.add_update_listener(async_reload_entry))
     return True
 
 
-async def config_entry_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Update listener, called when the config entry options are changed."""
     await hass.config_entries.async_reload(entry.entry_id)
 
@@ -49,8 +49,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN_DATA].pop(entry.entry_id)
 
     return unload_ok
-
-
-async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Handle an options update."""
-    await hass.config_entries.async_reload(entry.entry_id)
