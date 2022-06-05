@@ -2,15 +2,15 @@
   "config": {
     "step": {
       "user": {
-        "title": "FlexMeasure",
+        "title": "Choose what you want to measure",
         "description": "If you need help with the configuration have a look here: https://github.com/danieldotnl/ha-flexmeasure",
         "menu_options": {
-          "source": "Source sensor",
-          "time": "Time sensor"
+          "source": "Value changes of a source sensor",
+          "time": "Time"
         }
       },
       "source": {
-        "title": "FlexMeasure",
+        "title": "Configure source sensor",
         "description": "If you need help with the configuration have a look here: https://github.com/danieldotnl/ha-flexmeasure",
         "data": {
           "Source sensor": "Source sensor",
@@ -19,7 +19,7 @@
         }
       },
       "time": {
-        "title": "FlexMeasure",
+        "title": "Configure time sensor",
         "description": "If you need help with the configuration have a look here: https://github.com/danieldotnl/ha-flexmeasure",
         "data": {
           "Source sensor": "Source sensor",
@@ -28,20 +28,14 @@
         }
       }
     },
-    "error": {
-      "auth": "Username/Password is wrong."
-    },
-    "abort": {
-      "single_instance_allowed": "Only a single instance is allowed."
-    }
-  },
-  "options": {
-    "step": {
-      "user": {
-        "data": {
-          "binary_sensor": "Binary sensor enabled",
-          "sensor": "Sensor enabled",
-          "switch": "Switch enabled"
+    "options": {
+      "step": {
+        "user": {
+          "data": {
+            "binary_sensor": "Binary sensor enabled",
+            "sensor": "Sensor enabled",
+            "switch": "Switch enabled"
+          }
         }
       }
     }
