@@ -20,8 +20,8 @@ PLATFORMS = [SENSOR]
 
 
 # Services
-SERVICE_START = "Start"
-SERVICE_STOP = "Stop"
+SERVICE_START = "start"
+SERVICE_STOP = "stop"
 
 # Configuration and options
 CONF_ENABLED = "enabled"

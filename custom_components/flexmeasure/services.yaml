@@ -1,0 +1,26 @@
+start:
+  name: Start measuring
+  description: >-
+    Start measuring time/source sensor.
+  fields:
+    entity_id:
+      name: Entity
+      description: The FlexMeasure entity to trigger.
+      required: true
+      selector:
+        entity:
+          integration: flexmeasure
+          domain: sensor
+stop:
+  name: Stop measuring
+  description: >-
+    Stop measuring time/source sensor.
+  fields:
+    entity_id:
+      name: Entity
+      description: The FlexMeasure entity to trigger.
+      required: true
+      selector:
+        entity:
+          integration: flexmeasure
+          domain: sensor
