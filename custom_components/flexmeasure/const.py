@@ -33,6 +33,10 @@ CONF_TARGET = "Target sensor name"
 SENSOR_TYPE_TIME = "time"
 SENSOR_TYPE_SOURCE = "source"
 
+# Time boxes
+TIMEBOX_1H = {"name": "1h", "pattern": "0 0 * * *"}
+TIMEBOX_24H = {"name": "24h", "pattern": "0 * * * *"}
+
 
 # Defaults
 DEFAULT_NAME = DOMAIN

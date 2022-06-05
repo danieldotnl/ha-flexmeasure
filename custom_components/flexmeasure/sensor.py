@@ -1,4 +1,4 @@
-"""Sensor platform for FlexMeasure. Code partially based on/inspired by the HA utility meter."""
+"""Sensor platform for FlexMeasure"""
 from __future__ import annotations
 
 import logging
@@ -7,6 +7,8 @@ from decimal import DecimalException
 
 import homeassistant.util.dt as dt_util
 from custom_components.flexmeasure.const import CONF_SENSOR_TYPE
+from custom_components.flexmeasure.const import TIMEBOX_1H
+from custom_components.flexmeasure.const import TIMEBOX_24H
 from homeassistant.components.sensor import (
     RestoreSensor,
 )
@@ -32,6 +34,7 @@ from .const import SERVICE_START
 from .const import SERVICE_STOP
 from .const import STATUS_INACTIVE
 from .const import STATUS_MEASURING
+from .timebox import Timebox
 
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
@@ -52,9 +55,15 @@ async def async_setup_entry(
     if template:
         activation_template = Template(template)
 
+    utc_dt = dt_util.utcnow()
+    timeboxes = [
+        Timebox(TIMEBOX_1H["name"], TIMEBOX_1H["pattern"], utc_dt),
+        Timebox(TIMEBOX_24H["name"], TIMEBOX_24H["pattern"], utc_dt),
+    ]
+
     if sensor_type == SENSOR_TYPE_TIME:
-        sensor = FlexMeasureTimeSensor(
-            entry_id, target_sensor_name, activation_template
+        sensor = FlexMeasureSensor(
+            entry_id, target_sensor_name, activation_template, timeboxes
         )
 
     elif sensor_type == SENSOR_TYPE_SOURCE:
@@ -86,16 +95,15 @@ async def async_setup_entry(
 
 
 class FlexMeasureSensor(RestoreSensor):
-    def __init__(self, entry_id, sensor_name, template):
+    def __init__(self, entry_id, sensor_name, template, timeboxes):
         self._template = template
+        self._timeboxes = timeboxes
+
         self._attr_name = sensor_name
         self._attr_unique_id = entry_id
-
-        self._tracking = None
-        self._start_source_value = None
-        self._current_source_value = None
-        self._attr_native_value = 0
+        self._attr_native_value = STATUS_INACTIVE
         self._attr_icon = ICON
+        self._attr_extra_state_attributes = {}
 
     async def async_added_to_hass(self):
         @callback
@@ -134,43 +142,41 @@ class FlexMeasureSensor(RestoreSensor):
 
             self.async_on_remove(result.async_remove)
 
+    def start_measuring(self):
+        if self._attr_native_value == STATUS_INACTIVE:
+            self._attr_native_value = STATUS_MEASURING
+            utc_ts = dt_util.utcnow().timestamp()
+            for t in self._timeboxes:
+                t.start(utc_ts)
+                self._attr_extra_state_attributes.update(t.to_attributes())
+
+    def stop_measuring(self):
+        if self._attr_native_value == STATUS_MEASURING:
+            self._attr_native_value = STATUS_INACTIVE
+            utc_ts = dt_util.utcnow().timestamp()
+            for t in self._timeboxes:
+                t.stop(utc_ts)
+                self._attr_extra_state_attributes.update(t.to_attributes())
+
 
 class FlexMeasureSourceSensor(FlexMeasureSensor):
     """FlexMeasure Source Sensor class."""
 
     def __init__(self, entry_id, sensor_name, template, source_entity_id):
-        super().__init__(entry_id, sensor_name, template)
+        super().__init__(entry_id, sensor_name, template, [])
         self._source_sensor_id = source_entity_id
 
-        self._start_source_value = None
-        self._current_source_value = None
+    def determine_start_value(self) -> Decimal:
+        return Decimal(self.hass.states.get(self._source_sensor_id).state)
 
-    def start_measuring(self, **kwargs):
-        self._start_source_value = self.hass.states.get(self._source_sensor_id).state
-        _LOGGER.debug(
-            "(Re)START measuring %s at value: %s",
-            self._source_sensor_id,
-            self._start_source_value,
-        )
-
-    def stop_measuring(self, **kwargs):
+    def determine_session_diff(self):
         try:
+            current_value = Decimal(self.hass.states.get(self._source_sensor_id).state)
+            return current_value - self._session_start_value
 
-            self._current_source_value = Decimal(
-                self.hass.states.get(self._source_sensor_id).state
-            )
-            diff = self._current_source_value - self._attr_native_value
-            self._attr_native_value = self._attr_native_value + diff
-
-            self.async_write_ha_state()
         except DecimalException as err:
             _LOGGER.error("Could not convert sensor value to decimal: %s", err)
-
-        _LOGGER.debug(
-            "(Re)STOPPED measuring %s at value: %s",
-            self._source_sensor_id,
-            self._current_source_value,
-        )
+            # raise DetermineDiffError(err)
 
 
 class FlexMeasureTimeSensor(FlexMeasureSensor):

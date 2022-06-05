@@ -4,6 +4,7 @@ from custom_components.flexmeasure import async_reload_entry
 from custom_components.flexmeasure import async_setup_entry
 from custom_components.flexmeasure import async_unload_entry
 from custom_components.flexmeasure.const import DOMAIN
+from custom_components.flexmeasure.const import DOMAIN_DATA
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from .const import MOCK_CONFIG
@@ -19,21 +20,21 @@ from .const import MOCK_CONFIG
 async def test_setup_unload_and_reload_entry(hass):
     """Test entry setup and unload."""
     # Create a mock entry so we don't have to go through config flow
-    config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, entry_id="test")
+    config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, entry_id="1234")
 
     # Set up the entry and assert that the values set during setup are where we expect
     # them to be. Because we have patched the BlueprintDataUpdateCoordinator.async_get_data
     # call, no code from custom_components/flexmeasure/api.py actually runs.
     assert await async_setup_entry(hass, config_entry)
-    assert DOMAIN in hass.data and config_entry.entry_id in hass.data[DOMAIN]
+    assert DOMAIN_DATA in hass.data and config_entry.entry_id in hass.data[DOMAIN_DATA]
 
     # Reload the entry and assert that the data from above is still there
     assert await async_reload_entry(hass, config_entry) is None
-    assert DOMAIN in hass.data and config_entry.entry_id in hass.data[DOMAIN]
+    assert DOMAIN_DATA in hass.data and config_entry.entry_id in hass.data[DOMAIN_DATA]
 
     # Unload the entry and verify that the data has been removed
     assert await async_unload_entry(hass, config_entry)
-    assert config_entry.entry_id not in hass.data[DOMAIN]
+    assert config_entry.entry_id not in hass.data[DOMAIN_DATA]
 
 
 # async def test_setup_entry_exception(hass, error_on_get_data):

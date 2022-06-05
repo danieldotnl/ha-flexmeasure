@@ -3,7 +3,6 @@ Custom integration to enable flexible measuring.
 
 For more details about this integration, please refer to
 https://github.com/custom-components/ha-flexmeasure
-Code partially based on/inspired by the HA utility meter.
 """
 import logging
 from datetime import timedelta

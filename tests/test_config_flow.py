@@ -35,7 +35,7 @@ async def test_successful_config_flow(hass):
     )
 
     # Check that the config flow shows the user form as the first step
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.RESULT_TYPE_MENU
     assert result["step_id"] == "user"
 
     # If a user were to enter `test_username` for username and `test_password`
