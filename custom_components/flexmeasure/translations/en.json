@@ -27,17 +27,6 @@
           "Target sensor name": "Target sensor name"
         }
       }
-    },
-    "options": {
-      "step": {
-        "user": {
-          "data": {
-            "binary_sensor": "Binary sensor enabled",
-            "sensor": "Sensor enabled",
-            "switch": "Switch enabled"
-          }
-        }
-      }
     }
   }
 }
