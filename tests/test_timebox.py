@@ -74,10 +74,19 @@ def test_update(timebox):
 
 
 def test_daylight_savings(timebox):
-    fake_now = datetime(2022, 3, 27, 1, 50, tzinfo=timezone.utc)
+    fake_now = datetime(2022, 3, 27, 1, 50, tzinfo=timezone.utc)  # start summer time
     timebox.start(fake_now.timestamp())
 
     fake_now += timedelta(minutes=20)  # 2:10
+    timebox.stop(fake_now.timestamp())
+
+    assert timebox._box_state == 1200
+
+    fake_now = datetime(2022, 10, 30, 2, 50, tzinfo=timezone.utc)  # start winter time
+    timebox = Timebox(name="24h", reset_pattern=RESET_PATTERN, utcnow=fake_now)
+    timebox.start(fake_now.timestamp())
+
+    fake_now = datetime(2022, 10, 30, 3, 10, tzinfo=timezone.utc)  # 2:10
     timebox.stop(fake_now.timestamp())
 
     assert timebox._box_state == 1200
@@ -91,3 +100,23 @@ def test_hass_dt(timebox):
     timebox.stop(fake_now.timestamp())
 
     assert timebox._box_state == 172800
+
+
+def test_update_with_reset(timebox):
+    fake_now = datetime(2022, 1, 1, 0, 0, tzinfo=timezone.utc)
+    assert timebox._next_reset == fake_now + timedelta(days=1)
+
+    fake_now = datetime(2022, 1, 1, 10, 35, tzinfo=timezone.utc)
+    timebox.start(fake_now.timestamp())
+
+    fake_now = datetime(2022, 1, 2, 10, 35, tzinfo=timezone.utc)
+    timebox.update(fake_now.timestamp(), fake_now)
+
+    assert timebox._box_state == 0
+    assert timebox._prev_box_state == 86400
+
+    fake_now = datetime(2022, 1, 2, 10, 36, tzinfo=timezone.utc)
+    timebox.update(fake_now.timestamp(), fake_now)
+
+    assert timebox._box_state == 60
+    assert timebox._prev_box_state == 86400
