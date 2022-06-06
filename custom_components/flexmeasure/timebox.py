@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+import logging
 from datetime import datetime
 from datetime import timedelta
 
 from croniter import croniter
+
+_LOGGER: logging.Logger = logging.getLogger(__package__)
 
 
 class Timebox:
@@ -36,13 +39,19 @@ class Timebox:
         self._session_start_value = None
 
     def update(self, value, utcnow):
-        """Updates the state during measuring. Will be """
+        """Updates the state during measuring. Will be triggered every UPDATE_INTERVAL"""
+        _LOGGER.debug(
+            "Update with value: %s and utcnow: %s. Session state: %s",
+            value,
+            utcnow,
+            self._session_state,
+        )
         self._session_state = value - self._session_start_value
         self._box_state = self._box_state_start_value + self._session_state
         self.check_reset(value, utcnow)
 
     def check_reset(self, value, utcnow):
-        if utcnow > self._next_reset:
+        if utcnow >= self._next_reset:
             self._prev_box_state, self._box_state = self._box_state, 0
             self._session_state = 0
             self._session_start_value = value

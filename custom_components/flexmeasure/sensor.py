@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import logging
+from datetime import datetime
+from datetime import timedelta
 from decimal import Decimal
 from decimal import DecimalException
 
@@ -9,6 +11,7 @@ import homeassistant.util.dt as dt_util
 from custom_components.flexmeasure.const import CONF_SENSOR_TYPE
 from custom_components.flexmeasure.const import TIMEBOX_1H
 from custom_components.flexmeasure.const import TIMEBOX_24H
+from custom_components.flexmeasure.const import TIMEBOX_5M
 from homeassistant.components.sensor import (
     RestoreSensor,
 )
@@ -21,6 +24,7 @@ from homeassistant.helpers import entity_platform
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_template_result
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.event import TrackTemplate
 from homeassistant.helpers.template import Template
 
@@ -36,7 +40,7 @@ from .const import STATUS_INACTIVE
 from .const import STATUS_MEASURING
 from .timebox import Timebox
 
-
+UPDATE_INTERVAL = timedelta(minutes=1)
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
 
@@ -57,6 +61,7 @@ async def async_setup_entry(
 
     utc_dt = dt_util.utcnow()
     timeboxes = [
+        Timebox(TIMEBOX_5M["name"], TIMEBOX_5M["pattern"], utc_dt),
         Timebox(TIMEBOX_1H["name"], TIMEBOX_1H["pattern"], utc_dt),
         Timebox(TIMEBOX_24H["name"], TIMEBOX_24H["pattern"], utc_dt),
     ]
@@ -140,6 +145,12 @@ class FlexMeasureSensor(RestoreSensor):
             )
             result.async_refresh()
 
+            self.async_on_remove(
+                async_track_time_interval(
+                    self.hass, self.update_timeboxes, UPDATE_INTERVAL
+                )
+            )
+
             self.async_on_remove(result.async_remove)
 
     def start_measuring(self):
@@ -157,6 +168,17 @@ class FlexMeasureSensor(RestoreSensor):
             for t in self._timeboxes:
                 t.stop(utc_ts)
                 self._attr_extra_state_attributes.update(t.to_attributes())
+
+    def update_timeboxes(self, now: datetime | None = None):
+        _LOGGER.debug("Interval update triggered  at: %s.", now)
+        if self._attr_native_value == STATUS_MEASURING:
+            for timebox in self._timeboxes:
+                timebox.update(now.timestamp(), now)
+                self._attr_extra_state_attributes.update(timebox.to_attributes())
+        else:
+            for timebox in self._timeboxes:
+                timebox.check_reset(now.timestamp(), now)
+                self._attr_extra_state_attributes.update(timebox.to_attributes())
 
 
 class FlexMeasureSourceSensor(FlexMeasureSensor):

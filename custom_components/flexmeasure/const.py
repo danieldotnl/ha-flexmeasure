@@ -34,6 +34,7 @@ SENSOR_TYPE_TIME = "time"
 SENSOR_TYPE_SOURCE = "source"
 
 # Time boxes
+TIMEBOX_5M = {"name": "5m", "pattern": "*/5 * * * *"}
 TIMEBOX_1H = {"name": "1h", "pattern": "0 0 * * *"}
 TIMEBOX_24H = {"name": "24h", "pattern": "0 * * * *"}
 
