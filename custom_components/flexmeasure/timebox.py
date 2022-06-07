@@ -12,12 +12,10 @@ _LOGGER: logging.Logger = logging.getLogger(__package__)
 class Timebox:
     def __init__(
         self,
-        name: str,
         reset_pattern: str,
         utcnow: datetime,
         duration: timedelta | None = None,
     ):
-        self._name = name
         self._reset_pattern = reset_pattern
         self._duration = duration
 
@@ -27,6 +25,14 @@ class Timebox:
         self._session_start_value: float | None = None
         self._box_state_start_value: float | None = None
         self._set_next_reset(utcnow)
+
+    @property
+    def state(self):
+        return self._box_state
+
+    @property
+    def prev_state(self):
+        return self._prev_box_state
 
     def start(self, value):
         self._session_start_value = value
@@ -40,12 +46,6 @@ class Timebox:
 
     def update(self, value, utcnow):
         """Updates the state during measuring. Will be triggered every UPDATE_INTERVAL"""
-        _LOGGER.debug(
-            "Update with value: %s and utcnow: %s. Session state: %s",
-            value,
-            utcnow,
-            self._session_state,
-        )
         self._session_state = value - self._session_start_value
         self._box_state = self._box_state_start_value + self._session_state
         self.check_reset(value, utcnow)
@@ -59,10 +59,5 @@ class Timebox:
             self._set_next_reset(utcnow)
 
     def _set_next_reset(self, utcnow):
+        self.last_reset = utcnow.isoformat()
         self._next_reset = croniter(self._reset_pattern, utcnow).get_next(datetime)
-
-    def to_attributes(self):
-        return {
-            f"current_{self._name}": self._box_state,
-            f"prev_{self._name}": round(self._prev_box_state),
-        }

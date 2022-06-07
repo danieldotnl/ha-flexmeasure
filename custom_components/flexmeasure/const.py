@@ -34,15 +34,22 @@ SENSOR_TYPE_TIME = "time"
 SENSOR_TYPE_SOURCE = "source"
 
 # Time boxes
-TIMEBOX_5M = {"name": "5m", "pattern": "*/5 * * * *"}
-TIMEBOX_1H = {"name": "1h", "pattern": "0 0 * * *"}
-TIMEBOX_24H = {"name": "24h", "pattern": "0 * * * *"}
+NAME = "name"
+PATTERN = "pattern"
+TIMEBOX_5M = {NAME: "5m", PATTERN: "*/5 * * * *"}
+TIMEBOX_24H = {NAME: "24h", PATTERN: "0 0 * * *"}
+TIMEBOX_1H = {NAME: "1h", PATTERN: "0 * * * *"}
 
 
 # Defaults
 DEFAULT_NAME = DOMAIN
 
+# Attributes
+ATTR_PREV = "prev_period"
+ATTR_LAST_RESET = "last_reset"
+
 # Statuses
+ATTR_STATUS = "status"
 STATUS_MEASURING = "Measuring"
 STATUS_INACTIVE = "Inactive"
 STATUSES = [STATUS_MEASURING, STATUS_INACTIVE]
