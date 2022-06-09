@@ -29,6 +29,7 @@ CONF_SENSOR_TYPE = "Sensor type"
 CONF_SOURCE = "Source sensor"
 CONF_TEMPLATE = "Activation template"
 CONF_TARGET = "Target sensor name"
+CONF_TIMEBOXES = "timeboxes"
 
 SENSOR_TYPE_TIME = "time"
 SENSOR_TYPE_SOURCE = "source"
@@ -36,9 +37,16 @@ SENSOR_TYPE_SOURCE = "source"
 # Time boxes
 NAME = "name"
 PATTERN = "pattern"
-TIMEBOX_5M = {NAME: "5m", PATTERN: "*/5 * * * *"}
-TIMEBOX_24H = {NAME: "24h", PATTERN: "0 0 * * *"}
-TIMEBOX_1H = {NAME: "1h", PATTERN: "0 * * * *"}
+
+PREDEFINED_TIME_BOXES = {
+    "5m": {NAME: "5m", PATTERN: "*/5 * * * *"},
+    "hourly": {NAME: "hourly", PATTERN: "@hourly"},
+    "daily": {NAME: "daily", PATTERN: "@daily"},
+    "weekly": {NAME: "weekly", PATTERN: "@weekly"},
+    "monthly": {NAME: "monthly", PATTERN: "@monthly"},
+    "yearly": {NAME: "yearly", PATTERN: "@yearly"},
+    "custom": "custom",
+}
 
 
 # Defaults

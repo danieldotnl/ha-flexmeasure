@@ -4,12 +4,11 @@ from __future__ import annotations
 import logging
 from datetime import datetime
 from datetime import timedelta
+from typing import List
 
 import homeassistant.util.dt as dt_util
 from custom_components.flexmeasure.const import CONF_SENSOR_TYPE
-from custom_components.flexmeasure.const import TIMEBOX_1H
-from custom_components.flexmeasure.const import TIMEBOX_24H
-from custom_components.flexmeasure.const import TIMEBOX_5M
+from custom_components.flexmeasure.const import PREDEFINED_TIME_BOXES
 from homeassistant.components.sensor import (
     RestoreSensor,
 )
@@ -30,6 +29,7 @@ from .const import ATTR_PREV
 from .const import ATTR_STATUS
 from .const import CONF_TARGET
 from .const import CONF_TEMPLATE
+from .const import CONF_TIMEBOXES
 from .const import ICON
 from .const import NAME
 from .const import PATTERN
@@ -62,26 +62,18 @@ async def async_setup_entry(
     if template:
         activation_template = Template(template)
 
-    # utc_dt = dt_util.utcnow()
-    # timeboxes = [
-    #     Timebox(TIMEBOX_5M["name"], TIMEBOX_5M["pattern"], utc_dt),
-    #     Timebox(TIMEBOX_1H["name"], TIMEBOX_1H["pattern"], utc_dt),
-    #     Timebox(TIMEBOX_24H["name"], TIMEBOX_24H["pattern"], utc_dt),
-    # ]
-
-    patterns = [TIMEBOX_5M, TIMEBOX_1H, TIMEBOX_24H]
-    sensors = []
+    sensors: List[FlexMeasureSensor] = []
 
     if sensor_type == SENSOR_TYPE_TIME:
-        for pattern in patterns:
+        for box in config_entry.options[CONF_TIMEBOXES]:
             sensors.append(
                 FlexMeasureTimeSensor(
-                    entry_id, target_sensor_name, activation_template, pattern
+                    entry_id,
+                    target_sensor_name,
+                    activation_template,
+                    PREDEFINED_TIME_BOXES[box],
                 )
             )
-    #     sensor = FlexMeasureSensor(
-    #         entry_id, target_sensor_name, activation_template, TIMEBOX_5M
-    #     )
 
     # elif sensor_type == SENSOR_TYPE_SOURCE:
     #     registry = er.async_get(hass)
