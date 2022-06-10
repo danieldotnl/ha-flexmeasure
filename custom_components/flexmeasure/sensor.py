@@ -42,16 +42,15 @@ async def async_setup_entry(
 
     sensors: List[FlexMeasureSensor] = []
 
-    if sensor_type == SENSOR_TYPE_TIME:
-        for box in config_entry.options[CONF_TIMEBOXES]:
-            sensors.append(
-                FlexMeasureSensor(
-                    coordinator,
-                    target_sensor_name,
-                    sensor_type,
-                    PREDEFINED_TIME_BOXES[box][NAME],
-                )
+    for box in config_entry.options[CONF_TIMEBOXES]:
+        sensors.append(
+            FlexMeasureSensor(
+                coordinator,
+                target_sensor_name,
+                sensor_type,
+                PREDEFINED_TIME_BOXES[box][NAME],
             )
+        )
 
     async_add_entities(sensors)
 
@@ -81,6 +80,9 @@ class FlexMeasureSensor(SensorEntity):
         if self._sensor_type == SENSOR_TYPE_TIME:
             state = round(state)
             prev_state = round(prev_state)
+        else:
+            state = round(state, 2)
+            prev_state = round(prev_state, 2)
 
         self._attr_native_value = state
         self._attr_extra_state_attributes[ATTR_STATUS] = self._coordinator.status

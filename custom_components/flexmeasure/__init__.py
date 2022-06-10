@@ -6,14 +6,18 @@ https://github.com/custom-components/ha-flexmeasure
 """
 import logging
 
+import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import Config
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.template import Template
 from homeassistant.util import dt as dt_util
 
+from .const import CONF_SENSOR_TYPE
+from .const import CONF_SOURCE
 from .const import CONF_TEMPLATE
 from .const import CONF_TIMEBOXES
 from .const import DOMAIN
@@ -21,6 +25,8 @@ from .const import DOMAIN_DATA
 from .const import NAME
 from .const import PATTERN
 from .const import PREDEFINED_TIME_BOXES
+from .const import SENSOR_TYPE_SOURCE
+from .const import SENSOR_TYPE_TIME
 from .coordinator import FlexMeasureCoordinator
 from .timebox import Timebox
 
@@ -38,8 +44,35 @@ async def async_setup(hass: HomeAssistant, config: Config):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up this integration using UI."""
 
+    sensor_type: str = entry.options[CONF_SENSOR_TYPE]
     template: str | None = entry.options.get(CONF_TEMPLATE)
     activation_template: Template | None = None
+
+    def get_time_value():
+        return dt_util.utcnow().timestamp()
+
+    def get_source_value():
+        return float(hass.states.get(source_entity).state)
+
+    if sensor_type == SENSOR_TYPE_TIME:
+        value_callback = get_time_value
+    elif sensor_type == SENSOR_TYPE_SOURCE:
+
+        registry = er.async_get(hass)
+
+        try:
+            source_entity = er.async_validate_entity_id(
+                registry, entry.options[CONF_SOURCE]
+            )
+        except vol.Invalid:
+            # The entity is identified by an unknown entity registry ID
+            _LOGGER.error(
+                "Failed to setup FlexMeasure for unknown entity %s",
+                entry.options[CONF_SOURCE],
+            )
+            return False
+
+        value_callback = get_source_value
 
     if template:
         activation_template = Template(template)
@@ -60,11 +93,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             now,
         )
 
-    def get_value():
-        return dt_util.utcnow().timestamp()
-
     coordinator = FlexMeasureCoordinator(
-        hass, store, timeboxes, activation_template, get_value
+        hass, store, timeboxes, activation_template, value_callback
     )
 
     hass.data.setdefault(DOMAIN_DATA, {})[entry.entry_id] = coordinator

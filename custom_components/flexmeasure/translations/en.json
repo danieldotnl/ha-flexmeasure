@@ -5,7 +5,7 @@
         "title": "Choose what you want to measure",
         "description": "If you need help with the configuration have a look here: https://github.com/danieldotnl/ha-flexmeasure",
         "menu_options": {
-          "source": "Value changes of a source sensor",
+          "source": "Source entity",
           "time": "Time"
         }
       },
