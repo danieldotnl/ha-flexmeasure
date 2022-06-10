@@ -10,7 +10,7 @@
         }
       },
       "source": {
-        "title": "Configure source sensor",
+        "title": "Configure a source sensor",
         "description": "If you need help with the configuration have a look here: https://github.com/danieldotnl/ha-flexmeasure",
         "data": {
           "Source sensor": "Source sensor",
@@ -19,13 +19,16 @@
         }
       },
       "time": {
-        "title": "Configure time sensor",
-        "description": "If you need help with the configuration have a look here: https://github.com/danieldotnl/ha-flexmeasure",
+        "title": "Configure a time sensor",
+        "description": "Configure the name of the sensor and the template that will trigger measuring.",
         "data": {
-          "Source sensor": "Source sensor",
           "Activation template": "Activation template",
           "Target sensor name": "Target sensor name"
         }
+      },
+      "timeboxes": {
+        "title": "Choose what periods you want to measure",
+        "description": "For each selected period, a different sensor will be created which resets when the period is over."
       }
     }
   }

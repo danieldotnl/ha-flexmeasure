@@ -40,11 +40,11 @@ PATTERN = "pattern"
 
 PREDEFINED_TIME_BOXES = {
     "5m": {NAME: "5m", PATTERN: "*/5 * * * *"},
-    "hourly": {NAME: "hourly", PATTERN: "@hourly"},
-    "daily": {NAME: "daily", PATTERN: "@daily"},
-    "weekly": {NAME: "weekly", PATTERN: "@weekly"},
-    "monthly": {NAME: "monthly", PATTERN: "@monthly"},
-    "yearly": {NAME: "yearly", PATTERN: "@yearly"},
+    "hour": {NAME: "hour", PATTERN: "0 * * * *"},
+    "day": {NAME: "day", PATTERN: "0 0 * * *"},
+    "week": {NAME: "week", PATTERN: "0 0 * * 1"},
+    "month": {NAME: "month", PATTERN: "0 0 1 * *"},
+    "year": {NAME: "year", PATTERN: "0 0 1 1 *"},
     "custom": "custom",
 }
 

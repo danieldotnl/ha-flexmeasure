@@ -134,10 +134,10 @@ class FlexMeasureCoordinator:
 
     @callback
     async def update_measurements(self, now: datetime | None = None):
+        now = dt_util.utcnow()
         _LOGGER.debug("Interval update triggered  at: %s.", now.isoformat())
         reset: bool = False
         value = self._get_value()
-        now = dt_util.utcnow()
 
         if self.status == STATUS_MEASURING:
             for timebox in self.timeboxes:

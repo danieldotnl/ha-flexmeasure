@@ -66,12 +66,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     coordinator = FlexMeasureCoordinator(
         hass, store, timeboxes, activation_template, get_value
     )
-    # await coordinator.async_init()
 
     hass.data.setdefault(DOMAIN_DATA, {})[entry.entry_id] = coordinator
-
-    _LOGGER.debug("We zijn er en de value is: %s", hass.data[DOMAIN_DATA])
-
     hass.config_entries.async_setup_platforms(entry, ([Platform.SENSOR]))
 
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
