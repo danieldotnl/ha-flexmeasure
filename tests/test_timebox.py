@@ -13,7 +13,7 @@ NAME = "24h"
 @pytest.fixture
 def timebox():
     fake_now = datetime(2022, 1, 1, 10, 30, tzinfo=timezone.utc)
-    return Timebox(reset_pattern=RESET_PATTERN, utcnow=fake_now)
+    return Timebox(NAME, reset_pattern=RESET_PATTERN, utcnow=fake_now)
 
 
 def test_init(timebox):
@@ -77,7 +77,7 @@ def test_daylight_savings(timebox):
     assert timebox._box_state == 1200
 
     fake_now = datetime(2022, 10, 30, 2, 50, tzinfo=timezone.utc)  # start winter time
-    timebox = Timebox(reset_pattern=RESET_PATTERN, utcnow=fake_now)
+    timebox = Timebox(NAME, reset_pattern=RESET_PATTERN, utcnow=fake_now)
     timebox.start(fake_now.timestamp())
 
     fake_now = datetime(2022, 10, 30, 3, 10, tzinfo=timezone.utc)  # 2:10

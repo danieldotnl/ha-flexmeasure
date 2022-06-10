@@ -55,6 +55,7 @@ DEFAULT_NAME = DOMAIN
 # Attributes
 ATTR_PREV = "prev_period"
 ATTR_LAST_RESET = "last_reset"
+ATTR_NEXT_RESET = "next_reset"
 
 # Statuses
 ATTR_STATUS = "status"

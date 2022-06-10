@@ -5,16 +5,27 @@ For more details about this integration, please refer to
 https://github.com/custom-components/ha-flexmeasure
 """
 import logging
-from datetime import timedelta
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import Config
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.storage import Store
+from homeassistant.helpers.template import Template
+from homeassistant.util import dt as dt_util
 
+from .const import CONF_TEMPLATE
+from .const import CONF_TIMEBOXES
+from .const import DOMAIN
 from .const import DOMAIN_DATA
+from .const import NAME
+from .const import PATTERN
+from .const import PREDEFINED_TIME_BOXES
+from .coordinator import FlexMeasureCoordinator
+from .timebox import Timebox
 
-SCAN_INTERVAL = timedelta(seconds=30)
+STORAGE_VERSION = 1
+STORAGE_KEY_TEMPLATE = "{domain}_{entry_id}"
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
@@ -26,8 +37,40 @@ async def async_setup(hass: HomeAssistant, config: Config):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up this integration using UI."""
-    hass.data[DOMAIN_DATA] = {}
-    hass.data[DOMAIN_DATA][entry.entry_id] = {}
+
+    template: str | None = entry.options.get(CONF_TEMPLATE)
+    activation_template: Template | None = None
+
+    if template:
+        activation_template = Template(template)
+
+    store = Store(
+        hass,
+        STORAGE_VERSION,
+        STORAGE_KEY_TEMPLATE.format(domain=DOMAIN, entry_id=entry.entry_id),
+    )
+
+    timeboxes = {}
+    now = dt_util.utcnow()
+
+    for name in entry.options[CONF_TIMEBOXES]:
+        timeboxes[name] = Timebox(
+            PREDEFINED_TIME_BOXES[name][NAME],
+            PREDEFINED_TIME_BOXES[name][PATTERN],
+            now,
+        )
+
+    def get_value():
+        return dt_util.utcnow().timestamp()
+
+    coordinator = FlexMeasureCoordinator(
+        hass, store, timeboxes, activation_template, get_value
+    )
+    # await coordinator.async_init()
+
+    hass.data.setdefault(DOMAIN_DATA, {})[entry.entry_id] = coordinator
+
+    _LOGGER.debug("We zijn er en de value is: %s", hass.data[DOMAIN_DATA])
 
     hass.config_entries.async_setup_platforms(entry, ([Platform.SENSOR]))
 

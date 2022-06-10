@@ -5,6 +5,7 @@ from datetime import datetime
 from datetime import timedelta
 
 from croniter import croniter
+from homeassistant.util import dt as dt_util
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
@@ -12,14 +13,15 @@ _LOGGER: logging.Logger = logging.getLogger(__package__)
 class Timebox:
     def __init__(
         self,
+        name: str,
         reset_pattern: str,
         utcnow: datetime,
         duration: timedelta | None = None,
     ):
+        self.name = name
         self._reset_pattern = reset_pattern
         self._duration = duration
 
-        self._session_state = 0
         self._box_state = 0
         self._prev_box_state = 0
         self._session_start_value: float | None = None
@@ -46,18 +48,47 @@ class Timebox:
 
     def update(self, value, utcnow):
         """Updates the state during measuring. Will be triggered every UPDATE_INTERVAL"""
-        self._session_state = value - self._session_start_value
-        self._box_state = self._box_state_start_value + self._session_state
+        session_state = value - self._session_start_value
+        self._box_state = self._box_state_start_value + session_state
         self.check_reset(value, utcnow)
 
-    def check_reset(self, value, utcnow):
+    def check_reset(self, value, utcnow) -> bool:
         if utcnow >= self._next_reset:
             self._prev_box_state, self._box_state = self._box_state, 0
-            self._session_state = 0
             self._session_start_value = value
             self._box_state_start_value = self._box_state
             self._set_next_reset(utcnow)
+            return True
+        return False
 
-    def _set_next_reset(self, utcnow):
+    def _set_next_reset(self, utcnow: datetime):
         self.last_reset = utcnow.isoformat()
         self._next_reset = croniter(self._reset_pattern, utcnow).get_next(datetime)
+
+        _LOGGER.debug(
+            "setting reset for box: %s, input: %s with result: %s",
+            self.name,
+            utcnow.isoformat(),
+            self._next_reset.isoformat(),
+        )
+
+    @classmethod
+    def to_dict(cls, timebox: Timebox) -> dict[str, str]:
+        data = {
+            "box_state": timebox._box_state,
+            "box_state_start_value": timebox._box_state_start_value,
+            "prev_box_state": timebox._prev_box_state,
+            "session_start_value": timebox._session_start_value,
+            "next_reset": dt_util.as_timestamp(timebox._next_reset),
+        }
+        return data
+
+    @classmethod
+    def from_dict(cls, data: dict[str, str], timebox: Timebox) -> Timebox:
+        timebox._box_state = data["box_state"]
+        timebox._box_state_start_value = data["box_state_start_value"]
+        timebox._prev_box_state = data["prev_box_state"]
+        timebox._session_start_value = data["session_start_value"]
+        timebox._next_reset = dt_util.utc_from_timestamp(data["next_reset"])
+
+        return timebox
