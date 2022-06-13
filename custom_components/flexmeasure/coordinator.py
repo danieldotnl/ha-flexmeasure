@@ -19,6 +19,7 @@ from homeassistant.helpers.event import TrackTemplate
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.template import Template
 
+from .const import DOMAIN_DATA
 from .const import STATUS_INACTIVE
 from .const import STATUS_MEASURING
 from .timebox import Timebox
@@ -43,20 +44,27 @@ class FlexMeasureCoordinator:
         self._template: Template = template
         self._get_value: Callable[[str], NumberType] = value_callback
         self._listeners: dict[CALLBACK_TYPE, tuple[CALLBACK_TYPE, object | None]] = {}
+        self._context = None
 
         self.status: str = STATUS_INACTIVE
-
-        self._hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, self.async_init())
+        self._hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_START,
+            lambda _: self._hass.loop.create_task(self.async_init()),
+        )
 
     async def async_init(self):
-        await self.load_timeboxes()
 
-        result = async_track_template_result(
-            self._hass,
-            [TrackTemplate(self._template, None)],
-            self._async_on_template_update,
-        )
-        result.async_refresh()
+        await self._from_storage()
+
+        if self._template:
+            result = async_track_template_result(
+                self._hass,
+                [TrackTemplate(self._template, None)],
+                self._async_on_template_update,
+            )
+            result.async_refresh()
+        else:
+            await self.start_measuring()
 
         async_track_time_interval(self._hass, self.update_measurements, UPDATE_INTERVAL)
         await self.update_measurements()
@@ -75,9 +83,10 @@ class FlexMeasureCoordinator:
         update_callback()
         return remove_listener
 
-    async def load_timeboxes(self):
+    async def _from_storage(self):
         stored_data = await self._store.async_load()
         if stored_data:
+            self.status = stored_data[DOMAIN_DATA]
             for timebox in self.timeboxes:
                 Timebox.from_dict(stored_data[timebox.name], timebox)
 
@@ -106,8 +115,8 @@ class FlexMeasureCoordinator:
             else:
                 await self.stop_measuring()
 
-        # if event:
-        #     self.async_set_context(event.context)
+        if event:
+            self._context = event.context
 
     async def start_measuring(self):
         _LOGGER.debug("Start measuring!")
@@ -117,7 +126,7 @@ class FlexMeasureCoordinator:
             for timebox in self.timeboxes:
                 timebox.start(value)
             self._update_listeners()
-            await self._save_timeboxes()
+            await self._to_storage()
 
     async def stop_measuring(self):
         if self.status == STATUS_MEASURING:
@@ -126,7 +135,7 @@ class FlexMeasureCoordinator:
             for timebox in self.timeboxes:
                 timebox.stop(value)
             self._update_listeners()
-            await self._save_timeboxes()
+            await self._to_storage()
 
     def _update_listeners(self):
         for update_callback, _ in list(self._listeners.values()):
@@ -148,10 +157,11 @@ class FlexMeasureCoordinator:
                     reset = True
         self._update_listeners()
         if reset is True:
-            await self._save_timeboxes()
+            await self._to_storage()
 
-    async def _save_timeboxes(self) -> None:
+    async def _to_storage(self) -> None:
         data = {}
         for timebox in self.timeboxes:
             data[timebox.name] = Timebox.to_dict(timebox)
+        data[DOMAIN_DATA] = self.status
         await self._store.async_save(data)

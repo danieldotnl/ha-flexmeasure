@@ -89,5 +89,6 @@ class FlexMeasureSensor(SensorEntity):
         self._attr_extra_state_attributes[ATTR_PREV] = prev_state
         self._attr_extra_state_attributes[ATTR_LAST_RESET] = timebox.last_reset
         self._attr_extra_state_attributes[ATTR_NEXT_RESET] = timebox._next_reset
+        self.async_set_context(self._coordinator._context)
 
         self.async_write_ha_state()
