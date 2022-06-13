@@ -3,27 +3,29 @@
     "step": {
       "user": {
         "title": "Choose what you want to measure",
-        "description": "If you need help with the configuration have a look here: https://github.com/danieldotnl/ha-flexmeasure",
+        "description": "Time measures the duration of a template rendering to True. Source will measure the value changes of another sensor, while a template is rendering to True",
         "menu_options": {
           "source": "Source entity",
           "time": "Time"
         }
       },
       "source": {
-        "title": "Configure a source sensor",
-        "description": "If you need help with the configuration have a look here: https://github.com/danieldotnl/ha-flexmeasure",
+        "title": "Configure FlexMeasure settings",
+        "description": "Configure FlexMeasure settings",
         "data": {
-          "Source sensor": "Source sensor",
-          "Activation template": "Activation template",
-          "Target sensor name": "Target sensor name"
+          "source_sensor": "The source sensor:",
+          "activation_template": "Measure when this template renders 'True' (omit to always measure):",
+          "target_sensor": "The output sensors names start with:",
+          "value_template": "Render the output with a template:"
         }
       },
       "time": {
         "title": "Configure a time sensor",
         "description": "Configure the name of the sensor and the template that will trigger measuring.",
         "data": {
-          "Activation template": "Activation template",
-          "Target sensor name": "Target sensor name"
+          "activation_template": "Measure when this template renders 'True' (omit to always measure):",
+          "target_sensor": "The output sensors names start with:",
+          "value_template": "Render the output with a template:"
         }
       },
       "timeboxes": {
