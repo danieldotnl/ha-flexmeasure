@@ -26,9 +26,9 @@ SERVICE_STOP = "stop"
 # Configuration and options
 CONF_ENABLED = "enabled"
 CONF_SENSOR_TYPE = "Sensor type"
-CONF_SOURCE = "Source sensor"
-CONF_TEMPLATE = "Activation template"
-CONF_TARGET = "Target sensor name"
+CONF_SOURCE = "source_sensor"
+CONF_TEMPLATE = "activation_template"
+CONF_TARGET = "target_sensor"
 CONF_TIMEBOXES = "timeboxes"
 
 SENSOR_TYPE_TIME = "time"

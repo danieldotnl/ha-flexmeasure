@@ -7,6 +7,7 @@ from typing import Any
 from typing import cast
 
 import voluptuous as vol
+from homeassistant.const import CONF_VALUE_TEMPLATE
 from homeassistant.core import callback
 from homeassistant.helpers import selector
 from homeassistant.helpers.schema_config_entry_flow import SchemaConfigFlowHandler
@@ -40,6 +41,7 @@ GENERAL_CONFIG_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_TARGET): selector.TextSelector(),
         vol.Optional(CONF_TEMPLATE): selector.TemplateSelector(),
+        vol.Optional(CONF_VALUE_TEMPLATE): selector.TemplateSelector(),
     }
 )
 

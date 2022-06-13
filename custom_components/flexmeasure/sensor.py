@@ -8,6 +8,7 @@ from custom_components.flexmeasure.const import CONF_SENSOR_TYPE
 from custom_components.flexmeasure.const import PREDEFINED_TIME_BOXES
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_VALUE_TEMPLATE
 from homeassistant.core import callback
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -24,6 +25,7 @@ from .const import NAME
 from .const import SENSOR_TYPE_TIME
 from .coordinator import FlexMeasureCoordinator
 from .timebox import Timebox
+from .util import create_renderer
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
@@ -37,6 +39,9 @@ async def async_setup_entry(
     entry_id: str = config_entry.entry_id
     sensor_type: str = config_entry.options[CONF_SENSOR_TYPE]
     target_sensor_name: str = config_entry.options[CONF_TARGET]
+    value_template_renderer = create_renderer(
+        hass, config_entry.options.get(CONF_VALUE_TEMPLATE)
+    )
 
     coordinator = hass.data[DOMAIN_DATA][entry_id]
 
@@ -49,6 +54,7 @@ async def async_setup_entry(
                 target_sensor_name,
                 sensor_type,
                 PREDEFINED_TIME_BOXES[box][NAME],
+                value_template_renderer,
             )
         )
 
@@ -56,7 +62,14 @@ async def async_setup_entry(
 
 
 class FlexMeasureSensor(SensorEntity):
-    def __init__(self, coordinator, sensor_name, sensor_type, pattern_name):
+    def __init__(
+        self,
+        coordinator,
+        sensor_name,
+        sensor_type,
+        pattern_name,
+        value_template_renderer,
+    ):
         self._sensor_type = sensor_type
         self._coordinator: FlexMeasureCoordinator = coordinator
         self._pattern_name = pattern_name
@@ -64,6 +77,7 @@ class FlexMeasureSensor(SensorEntity):
         self._attr_unique_id = f"{sensor_name}_{pattern_name}"
         self._attr_icon = ICON
         self._attr_extra_state_attributes = {}
+        self._value_template_renderer = value_template_renderer
 
     async def async_added_to_hass(self):
         self.async_on_remove(
@@ -84,9 +98,11 @@ class FlexMeasureSensor(SensorEntity):
             state = round(state, 2)
             prev_state = round(prev_state, 2)
 
-        self._attr_native_value = state
+        self._attr_native_value = self._value_template_renderer(state)
         self._attr_extra_state_attributes[ATTR_STATUS] = self._coordinator.status
-        self._attr_extra_state_attributes[ATTR_PREV] = prev_state
+        self._attr_extra_state_attributes[ATTR_PREV] = self._value_template_renderer(
+            prev_state
+        )
         self._attr_extra_state_attributes[ATTR_LAST_RESET] = timebox.last_reset
         self._attr_extra_state_attributes[ATTR_NEXT_RESET] = timebox._next_reset
         self.async_set_context(self._coordinator._context)

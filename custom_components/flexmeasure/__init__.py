@@ -45,8 +45,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up this integration using UI."""
 
     sensor_type: str = entry.options[CONF_SENSOR_TYPE]
-    template: str | None = entry.options.get(CONF_TEMPLATE)
-    activation_template: Template | None = None
+    activation_template: str | None = entry.options.get(CONF_TEMPLATE)
 
     def get_time_value():
         return dt_util.utcnow().timestamp()
@@ -74,8 +73,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
         value_callback = get_source_value
 
-    if template:
-        activation_template = Template(template)
+    if activation_template:
+        activation_template = Template(activation_template)
+        activation_template.ensure_valid()
 
     store = Store(
         hass,
