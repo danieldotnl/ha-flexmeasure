@@ -18,6 +18,7 @@ from homeassistant.util import dt as dt_util
 
 from .const import CONF_SENSOR_TYPE
 from .const import CONF_SOURCE
+from .const import CONF_TARGET
 from .const import CONF_TEMPLATE
 from .const import CONF_TIMEBOXES
 from .const import DOMAIN
@@ -44,6 +45,7 @@ async def async_setup(hass: HomeAssistant, config: Config):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up this integration using UI."""
 
+    config_name: str = entry.options[CONF_TARGET]
     sensor_type: str = entry.options[CONF_SENSOR_TYPE]
     activation_template: str | None = entry.options.get(CONF_TEMPLATE)
 
@@ -66,7 +68,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         except vol.Invalid:
             # The entity is identified by an unknown entity registry ID
             _LOGGER.error(
-                "Failed to setup FlexMeasure for unknown entity %s",
+                "%s # Failed to setup FlexMeasure for unknown entity %s",
+                config_name,
                 entry.options[CONF_SOURCE],
             )
             return False
@@ -94,7 +97,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
 
     coordinator = FlexMeasureCoordinator(
-        hass, store, timeboxes, activation_template, value_callback
+        hass, config_name, store, timeboxes, activation_template, value_callback
     )
 
     hass.data.setdefault(DOMAIN_DATA, {})[entry.entry_id] = coordinator

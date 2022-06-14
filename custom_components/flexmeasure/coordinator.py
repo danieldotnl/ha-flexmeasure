@@ -33,15 +33,17 @@ class FlexMeasureCoordinator:
     def __init__(
         self,
         hass: HomeAssistant,
+        config_name: str,
         store: Store,
         timeboxes: List[Timebox],
-        template: Template,
+        template: Template | None,
         value_callback: Callable[[str], NumberType],
     ) -> None:
         self._hass: HomeAssistant = hass
+        self._name: str = config_name
         self._store: Store = store
         self._timeboxes: dict[str, Timebox] = timeboxes
-        self._template: Template = template
+        self._template: Template | None = template
         self._get_value: Callable[[str], NumberType] = value_callback
         self._listeners: dict[CALLBACK_TYPE, tuple[CALLBACK_TYPE, object | None]] = {}
         self._context = None
@@ -64,6 +66,8 @@ class FlexMeasureCoordinator:
             )
             result.async_refresh()
         else:
+            if not self.status:
+                self.status = STATUS_INACTIVE
             await self.start_measuring()
 
         async_track_time_interval(self._hass, self.update_measurements, UPDATE_INTERVAL)
@@ -83,13 +87,6 @@ class FlexMeasureCoordinator:
         update_callback()
         return remove_listener
 
-    async def _from_storage(self):
-        stored_data = await self._store.async_load()
-        if stored_data:
-            self.status = stored_data[DOMAIN_DATA]
-            for timebox in self.timeboxes:
-                Timebox.from_dict(stored_data[timebox.name], timebox)
-
     def get_timebox(self, name: str) -> Timebox:
         return self._timeboxes[name]
 
@@ -104,12 +101,13 @@ class FlexMeasureCoordinator:
 
         if isinstance(result, TemplateError):
             _LOGGER.error(
-                "Encountered a template error: %s. If we were measuring, we will now stop doing so.",
+                "%s # Encountered a template error: %s. If we were measuring, we will now stop doing so.",
+                self._name,
                 result,
             )
             await self.stop_measuring()
         else:
-            _LOGGER.debug("Template value changed into: %s", result)
+            _LOGGER.debug("%s # Template value changed into: %s", self._name, result)
             if result is True:
                 await self.start_measuring()
             else:
@@ -119,7 +117,7 @@ class FlexMeasureCoordinator:
             self._context = event.context
 
     async def start_measuring(self):
-        _LOGGER.debug("Start measuring!")
+        _LOGGER.debug("%s # Start measuring!", self._name)
         if self.status == STATUS_INACTIVE:
             self.status = STATUS_MEASURING
             value = self._get_value()
@@ -144,7 +142,9 @@ class FlexMeasureCoordinator:
     @callback
     async def update_measurements(self, now: datetime | None = None):
         now = dt_util.utcnow()
-        _LOGGER.debug("Interval update triggered  at: %s.", now.isoformat())
+        _LOGGER.debug(
+            "%s # Interval update triggered  at: %s.", self._name, now.isoformat()
+        )
         reset: bool = False
         value = self._get_value()
 
@@ -159,9 +159,30 @@ class FlexMeasureCoordinator:
         if reset is True:
             await self._to_storage()
 
+    async def _from_storage(self):
+        try:
+            stored_data = await self._store.async_load()
+            if stored_data:
+                self.status = stored_data.get(DOMAIN_DATA, STATUS_INACTIVE)
+                for timebox in self.timeboxes:
+                    Timebox.from_dict(stored_data[timebox.name], timebox)
+        except Exception as ex:
+            _LOGGER.error(
+                "%s # Loading component state from disk failed with error: %s",
+                self._name,
+                ex,
+            )
+
     async def _to_storage(self) -> None:
-        data = {}
-        for timebox in self.timeboxes:
-            data[timebox.name] = Timebox.to_dict(timebox)
-        data[DOMAIN_DATA] = self.status
-        await self._store.async_save(data)
+        try:
+            data = {}
+            for timebox in self.timeboxes:
+                data[timebox.name] = Timebox.to_dict(timebox)
+            data[DOMAIN_DATA] = self.status
+            await self._store.async_save(data)
+        except Exception as ex:
+            _LOGGER.error(
+                "%s # Saving component state to disk failed with error: %s",
+                self._name,
+                ex,
+            )
