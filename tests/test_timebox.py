@@ -96,7 +96,7 @@ def test_hass_dt(timebox):
     assert timebox._box_state == 172800
 
 
-def test_update_with_reset(timebox):
+def test_update_with_reset(timebox: Timebox):
     fake_now = datetime(2022, 1, 1, 0, 0, tzinfo=timezone.utc)
     assert timebox._next_reset == fake_now + timedelta(days=1)
 

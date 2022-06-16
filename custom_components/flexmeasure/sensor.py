@@ -6,7 +6,9 @@ from typing import List
 
 from custom_components.flexmeasure.const import CONF_SENSOR_TYPE
 from custom_components.flexmeasure.const import PREDEFINED_TIME_BOXES
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorStateClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_VALUE_TEMPLATE
 from homeassistant.core import callback
@@ -78,6 +80,10 @@ class FlexMeasureSensor(SensorEntity):
         self._attr_icon = ICON
         self._attr_extra_state_attributes = {}
         self._value_template_renderer = value_template_renderer
+        self._attr_state_class = SensorStateClass.TOTAL
+
+        if self._sensor_type == SENSOR_TYPE_TIME:
+            self._attr_device_class = SensorDeviceClass.DURATION
 
     async def async_added_to_hass(self):
         self.async_on_remove(
