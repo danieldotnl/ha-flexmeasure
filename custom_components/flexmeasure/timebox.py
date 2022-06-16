@@ -1,13 +1,12 @@
 from __future__ import annotations
 
-import logging
 from datetime import datetime
 from datetime import timedelta
 
 from croniter import croniter
 from homeassistant.util import dt as dt_util
 
-_LOGGER: logging.Logger = logging.getLogger(__package__)
+# _LOGGER: logging.Logger = logging.getLogger(__package__)
 
 
 class Timebox:
@@ -64,13 +63,6 @@ class Timebox:
     def _set_next_reset(self, utcnow: datetime):
         self.last_reset = utcnow.isoformat()
         self._next_reset = croniter(self._reset_pattern, utcnow).get_next(datetime)
-
-        _LOGGER.debug(
-            "setting reset for box: %s, input: %s with result: %s",
-            self.name,
-            utcnow.isoformat(),
-            self._next_reset.isoformat(),
-        )
 
     @classmethod
     def to_dict(cls, timebox: Timebox) -> dict[str, str]:

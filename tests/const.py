@@ -30,7 +30,7 @@ MOCK_TIMEBOX_CONFIG = {CONF_TIMEBOXES: ["day", "5m"]}
 
 MOCK_TIME_CONFIG_NOTEMPLATE = {
     CONF_TEMPLATE: None,
-    CONF_TARGET: "test_target",
+    CONF_TARGET: "test_notemplate",
     CONF_SENSOR_TYPE: SENSOR_TYPE_TIME,
     CONF_TIMEBOXES: ["day", "5m"],
 }

@@ -53,7 +53,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         return dt_util.utcnow().timestamp()
 
     def get_source_value():
-        return float(hass.states.get(source_entity).state)
+        return hass.states.get(source_entity).state
 
     if sensor_type == SENSOR_TYPE_TIME:
         value_callback = get_time_value
@@ -99,6 +99,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     coordinator = FlexMeasureCoordinator(
         hass, config_name, store, timeboxes, activation_template, value_callback
     )
+    # we should wait here till HA has started
+    # await coordinator.async_init()
 
     hass.data.setdefault(DOMAIN_DATA, {})[entry.entry_id] = coordinator
     hass.config_entries.async_setup_platforms(entry, ([Platform.SENSOR]))
