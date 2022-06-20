@@ -22,6 +22,7 @@ from homeassistant.helpers.event import TrackTemplate
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.template import Template
 
+from .const import ATTR_STATUS
 from .const import DOMAIN_DATA
 from .const import STATUS_INACTIVE
 from .const import STATUS_MEASURING
@@ -224,7 +225,7 @@ class FlexMeasureCoordinator:
             data = {}
             for timebox in self.timeboxes:
                 data[timebox.name] = Timebox.to_dict(timebox)
-            data[DOMAIN_DATA] = self.status
+            data[ATTR_STATUS] = self.status
             await self._store.async_save(data)
         except Exception as ex:
             _LOGGER.error(

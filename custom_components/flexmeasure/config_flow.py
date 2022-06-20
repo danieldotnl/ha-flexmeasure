@@ -51,13 +51,6 @@ SOURCE_CONFIG_SCHEMA = GENERAL_CONFIG_SCHEMA.extend(
     }
 )
 
-OPTIONS_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_SOURCE): selector.EntitySelector(),
-        vol.Required(CONF_TARGET): selector.TextSelector(),
-    }
-)
-
 timebox_options = [
     selector.SelectOptionDict(value=x, label=x) for x in PREDEFINED_TIME_BOXES
 ]
@@ -74,7 +67,14 @@ TIMEBOXES_SCHEMA = vol.Schema(
     }
 )
 
-GENERAL_CONFIG_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
+OPTIONS_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_SOURCE): selector.EntitySelector(),
+        vol.Required(CONF_TARGET): selector.TextSelector(),
+    }
+)
+
+CONFIG_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
     "user": SchemaFlowMenuStep(SENSOR_TYPES_MENU),
     SENSOR_TYPE_SOURCE: SchemaFlowFormStep(
         SOURCE_CONFIG_SCHEMA,
@@ -96,7 +96,7 @@ OPTIONS_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
 
 
 class ConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
-    config_flow = GENERAL_CONFIG_FLOW
+    config_flow = CONFIG_FLOW
     options_flow = OPTIONS_FLOW
 
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:

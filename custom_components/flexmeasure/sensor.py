@@ -15,7 +15,6 @@ from homeassistant.core import callback
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import ATTR_LAST_RESET
 from .const import ATTR_NEXT_RESET
 from .const import ATTR_PREV
 from .const import ATTR_STATUS
@@ -109,8 +108,8 @@ class FlexMeasureSensor(SensorEntity):
         self._attr_extra_state_attributes[ATTR_PREV] = self._value_template_renderer(
             prev_state
         )
-        self._attr_extra_state_attributes[ATTR_LAST_RESET] = timebox.last_reset
-        self._attr_extra_state_attributes[ATTR_NEXT_RESET] = timebox._next_reset
+        self._attr_last_reset = timebox.last_reset
+        self._attr_extra_state_attributes[ATTR_NEXT_RESET] = timebox.next_reset
         self.async_set_context(self._coordinator._context)
 
         self.async_write_ha_state()

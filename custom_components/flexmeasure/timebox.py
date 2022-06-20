@@ -6,6 +6,8 @@ from datetime import timedelta
 from croniter import croniter
 from homeassistant.util import dt as dt_util
 
+# import logging
+
 # _LOGGER: logging.Logger = logging.getLogger(__package__)
 
 
@@ -25,6 +27,8 @@ class Timebox:
         self._prev_box_state = 0
         self._session_start_value: float | None = None
         self._box_state_start_value: float | None = None
+        self.last_reset = None
+        self.next_reset = None
         self._set_next_reset(utcnow)
 
     @property
@@ -52,7 +56,7 @@ class Timebox:
         self.check_reset(value, utcnow)
 
     def check_reset(self, value, utcnow) -> bool:
-        if utcnow >= self._next_reset:
+        if utcnow >= self.next_reset:
             self._prev_box_state, self._box_state = self._box_state, 0
             self._session_start_value = value
             self._box_state_start_value = self._box_state
@@ -61,8 +65,8 @@ class Timebox:
         return False
 
     def _set_next_reset(self, utcnow: datetime):
-        self.last_reset = utcnow.isoformat()
-        self._next_reset = croniter(self._reset_pattern, utcnow).get_next(datetime)
+        self.last_reset = utcnow
+        self.next_reset = croniter(self._reset_pattern, utcnow).get_next(datetime)
 
     @classmethod
     def to_dict(cls, timebox: Timebox) -> dict[str, str]:
@@ -71,7 +75,8 @@ class Timebox:
             "box_state_start_value": timebox._box_state_start_value,
             "prev_box_state": timebox._prev_box_state,
             "session_start_value": timebox._session_start_value,
-            "next_reset": dt_util.as_timestamp(timebox._next_reset),
+            "next_reset": dt_util.as_timestamp(timebox.next_reset),
+            "last_reset": dt_util.as_timestamp(timebox.last_reset),
         }
         return data
 
@@ -81,6 +86,7 @@ class Timebox:
         timebox._box_state_start_value = data["box_state_start_value"]
         timebox._prev_box_state = data["prev_box_state"]
         timebox._session_start_value = data["session_start_value"]
-        timebox._next_reset = dt_util.utc_from_timestamp(data["next_reset"])
+        timebox.next_reset = dt_util.utc_from_timestamp(data["next_reset"])
+        timebox.last_reset = dt_util.utc_from_timestamp(data.get("last_reset"))
 
         return timebox

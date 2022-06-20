@@ -19,8 +19,8 @@ def timebox():
 def test_init(timebox):
 
     assert timebox._reset_pattern == RESET_PATTERN
-    print(f"reset: {timebox._next_reset}")
-    assert timebox._next_reset == datetime(2022, 1, 2, 0, 0, tzinfo=timezone.utc)
+    print(f"reset: {timebox.next_reset}")
+    assert timebox.next_reset == datetime(2022, 1, 2, 0, 0, tzinfo=timezone.utc)
 
 
 def test_start(timebox):
@@ -98,7 +98,7 @@ def test_hass_dt(timebox):
 
 def test_update_with_reset(timebox: Timebox):
     fake_now = datetime(2022, 1, 1, 0, 0, tzinfo=timezone.utc)
-    assert timebox._next_reset == fake_now + timedelta(days=1)
+    assert timebox.next_reset == fake_now + timedelta(days=1)
 
     fake_now = datetime(2022, 1, 1, 10, 35, tzinfo=timezone.utc)
     timebox.start(fake_now.timestamp())
