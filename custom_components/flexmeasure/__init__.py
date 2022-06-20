@@ -87,7 +87,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     )
 
     timeboxes = {}
-    now = dt_util.utcnow()
+    now = dt_util.now()
 
     for name in entry.options[CONF_TIMEBOXES]:
         timeboxes[name] = Timebox(

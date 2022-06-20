@@ -16,7 +16,7 @@ class Timebox:
         self,
         name: str,
         reset_pattern: str,
-        utcnow: datetime,
+        tznow: datetime,
         duration: timedelta | None = None,
     ):
         self.name = name
@@ -29,7 +29,7 @@ class Timebox:
         self._box_state_start_value: float | None = None
         self.last_reset = None
         self.next_reset = None
-        self._set_next_reset(utcnow)
+        self._set_next_reset(tznow)
 
     @property
     def state(self):
@@ -49,24 +49,24 @@ class Timebox:
         )
         self._session_start_value = None
 
-    def update(self, value, utcnow):
+    def update(self, value, tznow):
         """Updates the state during measuring. Will be triggered every UPDATE_INTERVAL"""
         session_state = value - self._session_start_value
         self._box_state = self._box_state_start_value + session_state
-        self.check_reset(value, utcnow)
+        self.check_reset(value, tznow)
 
-    def check_reset(self, value, utcnow) -> bool:
-        if utcnow >= self.next_reset:
+    def check_reset(self, value, tznow) -> bool:
+        if tznow >= self.next_reset:
             self._prev_box_state, self._box_state = self._box_state, 0
             self._session_start_value = value
             self._box_state_start_value = self._box_state
-            self._set_next_reset(utcnow)
+            self._set_next_reset(tznow)
             return True
         return False
 
-    def _set_next_reset(self, utcnow: datetime):
-        self.last_reset = utcnow
-        self.next_reset = croniter(self._reset_pattern, utcnow).get_next(datetime)
+    def _set_next_reset(self, tznow: datetime):
+        self.last_reset = tznow
+        self.next_reset = croniter(self._reset_pattern, tznow).get_next(datetime)
 
     @classmethod
     def to_dict(cls, timebox: Timebox) -> dict[str, str]:

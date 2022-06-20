@@ -182,7 +182,7 @@ class FlexMeasureCoordinator:
 
     @callback
     async def update_measurements(self, now: datetime | None = None):
-        now = dt_util.utcnow()
+        now = dt_util.now()
         _LOGGER.debug(
             "%s # Interval update triggered  at: %s.", self._name, now.isoformat()
         )

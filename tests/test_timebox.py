@@ -4,6 +4,7 @@ from datetime import timezone
 
 import homeassistant.util.dt as dt_util
 import pytest
+import pytz
 from custom_components.flexmeasure.timebox import Timebox
 
 RESET_PATTERN = "0 0 * * *"
@@ -12,15 +13,19 @@ NAME = "24h"
 
 @pytest.fixture
 def timebox():
-    fake_now = datetime(2022, 1, 1, 10, 30, tzinfo=timezone.utc)
-    return Timebox(NAME, reset_pattern=RESET_PATTERN, utcnow=fake_now)
+    fake_now = datetime(2022, 1, 1, 10, 30)
+    tz = pytz.timezone("Europe/Amsterdam")
+    return Timebox(NAME, reset_pattern=RESET_PATTERN, tznow=tz.localize(fake_now))
 
 
 def test_init(timebox):
 
     assert timebox._reset_pattern == RESET_PATTERN
     print(f"reset: {timebox.next_reset}")
-    assert timebox.next_reset == datetime(2022, 1, 2, 0, 0, tzinfo=timezone.utc)
+
+    reset_now = datetime(2022, 1, 2, 0, 0)
+    tz = pytz.timezone("Europe/Amsterdam")
+    assert timebox.next_reset == tz.localize(reset_now)
 
 
 def test_start(timebox):
@@ -76,8 +81,9 @@ def test_daylight_savings(timebox):
 
     assert timebox._box_state == 1200
 
+    fake_reset = datetime(2022, 10, 30, 2, 50, tzinfo=pytz.timezone("Europe/Amsterdam"))
     fake_now = datetime(2022, 10, 30, 2, 50, tzinfo=timezone.utc)  # start winter time
-    timebox = Timebox(NAME, reset_pattern=RESET_PATTERN, utcnow=fake_now)
+    timebox = Timebox(NAME, reset_pattern=RESET_PATTERN, tznow=fake_reset)
     timebox.start(fake_now.timestamp())
 
     fake_now = datetime(2022, 10, 30, 3, 10, tzinfo=timezone.utc)  # 2:10
@@ -97,8 +103,10 @@ def test_hass_dt(timebox):
 
 
 def test_update_with_reset(timebox: Timebox):
-    fake_now = datetime(2022, 1, 1, 0, 0, tzinfo=timezone.utc)
-    assert timebox.next_reset == fake_now + timedelta(days=1)
+    reset_now = datetime(2022, 1, 1, 0, 0)
+    tz = pytz.timezone("Europe/Amsterdam")
+    reset_now = tz.localize(reset_now)
+    assert timebox.next_reset == reset_now + timedelta(days=1)
 
     fake_now = datetime(2022, 1, 1, 10, 35, tzinfo=timezone.utc)
     timebox.start(fake_now.timestamp())
