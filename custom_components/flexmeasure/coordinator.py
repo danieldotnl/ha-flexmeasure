@@ -70,8 +70,6 @@ class FlexMeasureCoordinator:
             )
             result.async_refresh()
         else:
-            if not self.status:
-                self.status = STATUS_INACTIVE
             await self.start_measuring()
 
         async_track_time_interval(self._hass, self.update_measurements, UPDATE_INTERVAL)

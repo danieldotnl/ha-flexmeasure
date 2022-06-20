@@ -58,8 +58,8 @@ ATTR_NEXT_RESET = "next_reset"
 
 # Statuses
 ATTR_STATUS = "status"
-STATUS_MEASURING = "Measuring"
-STATUS_INACTIVE = "Inactive"
+STATUS_MEASURING = "measuring"
+STATUS_INACTIVE = "inactive"
 STATUSES = [STATUS_MEASURING, STATUS_INACTIVE]
 
 
