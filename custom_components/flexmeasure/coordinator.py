@@ -9,7 +9,6 @@ from typing import get_args
 from typing import List
 
 import homeassistant.util.dt as dt_util
-from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import callback
@@ -54,10 +53,6 @@ class FlexMeasureCoordinator:
         self.last_update_value = None
 
         self.status: str = STATUS_INACTIVE
-        self._hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_START,
-            lambda _: self._hass.loop.create_task(self.async_init()),
-        )
 
     async def async_init(self):
         await self._from_storage()

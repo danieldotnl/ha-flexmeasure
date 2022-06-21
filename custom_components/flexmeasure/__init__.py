@@ -8,8 +8,10 @@ import logging
 
 import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.const import Platform
 from homeassistant.core import Config
+from homeassistant.core import CoreState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.storage import Store
@@ -99,8 +101,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     coordinator = FlexMeasureCoordinator(
         hass, config_name, store, timeboxes, activation_template, value_callback
     )
-    # we should wait here till HA has started
-    # await coordinator.async_init()
+
+    async def run_init(*args):
+        _LOGGER.debug("I'm in the RUNINIT")
+        await coordinator.async_init()
+
+    if not hass.state == CoreState.running:
+        _LOGGER.debug("WAITING FOR STARTED EVENT!")
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, run_init)
+    else:
+        await run_init()
 
     hass.data.setdefault(DOMAIN_DATA, {})[entry.entry_id] = coordinator
     hass.config_entries.async_setup_platforms(entry, ([Platform.SENSOR]))
