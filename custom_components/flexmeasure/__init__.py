@@ -36,7 +36,7 @@ from .timebox import Timebox
 STORAGE_VERSION = 1
 STORAGE_KEY_TEMPLATE = "{domain}_{entry_id}"
 
-_LOGGER: logging.Logger = logging.getLogger(__package__)
+_LOGGER: logging.Logger = logging.getLogger(__name__)
 
 
 async def async_setup(hass: HomeAssistant, config: Config):

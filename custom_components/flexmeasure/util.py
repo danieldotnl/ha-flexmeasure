@@ -7,7 +7,7 @@ from homeassistant.helpers.template import Template
 
 NumberType = Union[float, Decimal, int]
 
-_LOGGER: logging.Logger = logging.getLogger(__package__)
+_LOGGER: logging.Logger = logging.getLogger(__name__)
 
 
 def create_renderer(hass, value_template):

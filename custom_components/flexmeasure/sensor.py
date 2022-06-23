@@ -28,7 +28,7 @@ from .coordinator import FlexMeasureCoordinator
 from .timebox import Timebox
 from .util import create_renderer
 
-_LOGGER: logging.Logger = logging.getLogger(__package__)
+_LOGGER: logging.Logger = logging.getLogger(__name__)
 
 
 async def async_setup_entry(

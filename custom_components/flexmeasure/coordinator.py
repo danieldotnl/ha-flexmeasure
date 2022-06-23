@@ -29,7 +29,7 @@ from .timebox import Timebox
 from .util import NumberType
 
 UPDATE_INTERVAL = timedelta(minutes=1)
-_LOGGER: logging.Logger = logging.getLogger(__package__)
+_LOGGER: logging.Logger = logging.getLogger(__name__)
 
 
 class FlexMeasureCoordinator:
