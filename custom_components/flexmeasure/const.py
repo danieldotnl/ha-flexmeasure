@@ -29,7 +29,8 @@ CONF_SENSOR_TYPE = "Sensor type"
 CONF_SOURCE = "source_sensor"
 CONF_TEMPLATE = "activation_template"
 CONF_TARGET = "target_sensor"
-CONF_TIMEBOXES = "timeboxes"
+CONF_METERS = "meters"
+CONF_PERIODS = "periods"
 
 SENSOR_TYPE_TIME = "time"
 SENSOR_TYPE_SOURCE = "source"
@@ -38,7 +39,7 @@ SENSOR_TYPE_SOURCE = "source"
 NAME = "name"
 PATTERN = "pattern"
 
-PREDEFINED_TIME_BOXES = {
+PREDEFINED_PERIODS = {
     "5m": {NAME: "5m", PATTERN: "*/5 * * * *"},
     "hour": {NAME: "hour", PATTERN: "0 * * * *"},
     "day": {NAME: "day", PATTERN: "0 0 * * *"},
@@ -60,6 +61,9 @@ ATTR_NEXT_RESET = "next_reset"
 ATTR_STATUS = "status"
 STATUS_MEASURING = "measuring"
 STATUS_INACTIVE = "inactive"
+STATUS_WAIT_SCHEDULE = "wait for schedule"
+STATUS_WAIT_TEMPLATE = "wait for template"
+STATUS_ERROR = "error"
 STATUSES = [STATUS_MEASURING, STATUS_INACTIVE]
 
 

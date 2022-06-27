@@ -18,20 +18,20 @@ from homeassistant.helpers.storage import Store
 from homeassistant.helpers.template import Template
 from homeassistant.util import dt as dt_util
 
+from .const import CONF_PERIODS
 from .const import CONF_SENSOR_TYPE
 from .const import CONF_SOURCE
 from .const import CONF_TARGET
 from .const import CONF_TEMPLATE
-from .const import CONF_TIMEBOXES
 from .const import DOMAIN
 from .const import DOMAIN_DATA
-from .const import NAME
 from .const import PATTERN
-from .const import PREDEFINED_TIME_BOXES
+from .const import PREDEFINED_PERIODS
 from .const import SENSOR_TYPE_SOURCE
 from .const import SENSOR_TYPE_TIME
 from .coordinator import FlexMeasureCoordinator
-from .timebox import Timebox
+from .meter import Meter
+from .period import Period
 
 STORAGE_VERSION = 1
 STORAGE_KEY_TEMPLATE = "{domain}_{entry_id}"
@@ -88,18 +88,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         STORAGE_KEY_TEMPLATE.format(domain=DOMAIN, entry_id=entry.entry_id),
     )
 
-    timeboxes = {}
+    meters = {}
     now = dt_util.now()
 
-    for name in entry.options[CONF_TIMEBOXES]:
-        timeboxes[name] = Timebox(
-            PREDEFINED_TIME_BOXES[name][NAME],
-            PREDEFINED_TIME_BOXES[name][PATTERN],
-            now,
-        )
+    for name in entry.options[CONF_PERIODS]:
+        period = Period(PREDEFINED_PERIODS[name][PATTERN], now)
+        meters[name] = Meter(f"{config_name}_{name}", period)
 
     coordinator = FlexMeasureCoordinator(
-        hass, config_name, store, timeboxes, activation_template, value_callback
+        hass, config_name, store, meters, activation_template, value_callback
     )
 
     async def run_init(*args):

@@ -15,17 +15,13 @@ from homeassistant.core import callback
 from homeassistant.core import CALLBACK_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
+from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.event import async_track_template_result
-from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.event import TrackTemplate
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.template import Template
 
-from .const import ATTR_STATUS
-from .const import DOMAIN_DATA
-from .const import STATUS_INACTIVE
-from .const import STATUS_MEASURING
-from .timebox import Timebox
+from .meter import Meter
 from .util import NumberType
 
 UPDATE_INTERVAL = timedelta(minutes=1)
@@ -38,21 +34,19 @@ class FlexMeasureCoordinator:
         hass: HomeAssistant,
         config_name: str,
         store: Store,
-        timeboxes: List[Timebox],
+        meters: List[Meter],
         template: Template | None,
         value_callback: Callable[[str], NumberType],
     ) -> None:
         self._hass: HomeAssistant = hass
         self._name: str = config_name
         self._store: Store = store
-        self._timeboxes: dict[str, Timebox] = timeboxes
+        self._meters: dict[str, Meter] = meters
         self._template: Template | None = template
         self._get_value: Callable[[str], NumberType] = value_callback
         self._listeners: dict[CALLBACK_TYPE, tuple[CALLBACK_TYPE, object | None]] = {}
         self._context = None
         self.last_update_value = None
-
-        self.status: str = STATUS_INACTIVE
 
     async def async_init(self):
         await self._from_storage()
@@ -65,10 +59,10 @@ class FlexMeasureCoordinator:
             )
             result.async_refresh()
         else:
-            await self.start_measuring()
+            for meter in self.meters:
+                meter.disable_template()
 
-        async_track_time_interval(self._hass, self.update_measurements, UPDATE_INTERVAL)
-        await self.update_measurements()  # initial update to reset timeboxes when needed
+        await self.async_on_heartbeat()
 
     @callback
     def async_add_listener(
@@ -84,79 +78,80 @@ class FlexMeasureCoordinator:
         update_callback()
         return remove_listener
 
-    def get_timebox(self, name: str) -> Timebox:
-        return self._timeboxes[name]
+    def get_meter(self, name: str) -> Meter:
+        return self._meters[name]
 
     @property
-    def timeboxes(self) -> List[Timebox]:
-        return self._timeboxes.values()
+    def meters(self) -> List[Meter]:
+        return self._meters.values()
+
+    async def _async_update_meters(self, template_result: bool | None = None):
+        tznow = dt_util.now()
+        trigger = (
+            f"template changed to {template_result}"
+            if template_result is not None
+            else "update interval"
+        )
+        _LOGGER.debug(
+            "%s # Update triggered at: %s by %s.",
+            self._name,
+            tznow.isoformat(),
+            trigger,
+        )
+
+        try:
+            input_value = self._parse_value(self._get_value())
+        except ValueError as ex:
+            _LOGGER.error(
+                "%s # Could not update meters because the input value is invalid. Error: %s",
+                self._name,
+                ex,
+            )
+            # set the input value to the last updated value, so the meters are at least reset when required
+            if self.last_update_value:
+                input_value = self.last_update_value
+            else:
+                return  # nothing we can do... we'll try again next time
+
+        if template_result is not None:
+            for meter in self.meters:
+                meter.on_template_change(tznow, input_value, template_result)
+        else:
+            for meter in self.meters:
+                meter.on_heartbeat(tznow, input_value)
+
+        self._update_listeners()
+        await self._to_storage()
+
+    @callback
+    async def async_on_heartbeat(self, now: datetime | None = None):
+        await self._async_update_meters()
+
+        # We _floor_ utcnow to create a schedule on a rounded minute,
+        # minimizing the time between the point and the real activation.
+        # That way we obtain a constant update frequency,
+        # as long as the update process takes less than a minute
+        async_track_point_in_utc_time(
+            self._hass,
+            self.async_on_heartbeat,
+            dt_util.utcnow().replace(second=0, microsecond=0) + UPDATE_INTERVAL,
+        )
 
     @callback
     async def _async_on_template_update(self, event, updates):
-        """Update ha state when dependencies update."""
         result = updates.pop().result
 
         if isinstance(result, TemplateError):
             _LOGGER.error(
-                "%s # Encountered a template error: %s. If we were measuring, we will now stop doing so.",
+                "%s # Encountered a template error: %s. Could not start or stop measuring!",
                 self._name,
                 result,
             )
-            await self.stop_measuring()
         else:
-            _LOGGER.debug("%s # Template value changed into: %s", self._name, result)
-            if result is True:
-                await self.start_measuring()
-            else:
-                await self.stop_measuring()
+            await self._async_update_meters(result)
 
         if event:
             self._context = event.context
-
-    async def start_measuring(self):
-        _LOGGER.debug("%s # Start measuring!", self._name)
-        if self.status == STATUS_INACTIVE:
-            try:
-                value = self._parse_value(self._get_value())
-            except ValueError as ex:
-                _LOGGER.error(
-                    "%s # Could not start measuring because the input value is invalid. Error: %s",
-                    self._name,
-                    ex,
-                )
-                return
-
-            for timebox in self.timeboxes:
-                timebox.start(value)
-            self.status = STATUS_MEASURING
-            self.last_update_value = value
-            self._update_listeners()
-            await self._to_storage()
-
-    async def stop_measuring(self):
-        if self.status == STATUS_MEASURING:
-            try:
-                value = self._parse_value(self._get_value())
-            except ValueError as ex:
-                _LOGGER.error(
-                    "%s # Could not stop measuring because the input value is invalid. Instead the latest update value will be used. Error: %s",
-                    self._name,
-                    ex,
-                )
-                value = self.last_update_value
-                if not value:
-                    _LOGGER.error(
-                        "%s # Latest update value is empty. Zero will be used instead, resulting in an incorrect state.",
-                        self._name,
-                        value=0,
-                    )
-
-            for timebox in self.timeboxes:
-                timebox.stop(value)
-            self.status = STATUS_INACTIVE
-            self.last_update_value = value
-            self._update_listeners()
-            await self._to_storage()
 
     def _update_listeners(self):
         for update_callback, _ in list(self._listeners.values()):
@@ -173,39 +168,12 @@ class FlexMeasureCoordinator:
         else:
             return float(value)
 
-    @callback
-    async def update_measurements(self, now: datetime | None = None):
-        now = dt_util.now()
-        _LOGGER.debug(
-            "%s # Interval update triggered  at: %s.", self._name, now.isoformat()
-        )
-        reset: bool = False
-        value = None
-        try:
-            value = self._parse_value(self._get_value())
-        except ValueError as ex:
-            _LOGGER.warning("%s # Could not update sensors: %s", self._name, ex)
-            return
-
-        if self.status == STATUS_MEASURING:
-            for timebox in self.timeboxes:
-                timebox.update(value, now)
-        else:
-            for timebox in self.timeboxes:
-                if timebox.check_reset(value, now):
-                    reset = True
-        self.last_update_value = value
-        self._update_listeners()
-        if reset is True:
-            await self._to_storage()
-
     async def _from_storage(self):
         try:
             stored_data = await self._store.async_load()
             if stored_data:
-                self.status = stored_data.get(DOMAIN_DATA)
-                for timebox in self.timeboxes:
-                    Timebox.from_dict(stored_data[timebox.name], timebox)
+                for meter in self.meters:
+                    Meter.from_dict(stored_data[meter.name], meter)
         except Exception as ex:
             _LOGGER.error(
                 "%s # Loading component state from disk failed with error: %s",
@@ -216,9 +184,8 @@ class FlexMeasureCoordinator:
     async def _to_storage(self) -> None:
         try:
             data = {}
-            for timebox in self.timeboxes:
-                data[timebox.name] = Timebox.to_dict(timebox)
-            data[ATTR_STATUS] = self.status
+            for meter in self.meters:
+                data[meter.name] = Meter.to_dict(meter)
             await self._store.async_save(data)
         except Exception as ex:
             _LOGGER.error(

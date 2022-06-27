@@ -28,7 +28,7 @@
           "value_template": "Render the output with a template:"
         }
       },
-      "timeboxes": {
+      "periods": {
         "title": "Choose what periods you want to measure",
         "description": "For each selected period, a different sensor will be created which resets when the period is over."
       }

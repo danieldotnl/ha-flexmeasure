@@ -14,12 +14,13 @@ from homeassistant.helpers.schema_config_entry_flow import SchemaConfigFlowHandl
 from homeassistant.helpers.schema_config_entry_flow import SchemaFlowFormStep
 from homeassistant.helpers.schema_config_entry_flow import SchemaFlowMenuStep
 
+from .const import CONF_PERIODS
 from .const import CONF_SENSOR_TYPE
 from .const import CONF_SOURCE
 from .const import CONF_TARGET
 from .const import CONF_TEMPLATE
 from .const import DOMAIN
-from .const import PREDEFINED_TIME_BOXES
+from .const import PREDEFINED_PERIODS
 from .const import SENSOR_TYPE_SOURCE
 from .const import SENSOR_TYPE_TIME
 
@@ -51,15 +52,15 @@ SOURCE_CONFIG_SCHEMA = GENERAL_CONFIG_SCHEMA.extend(
     }
 )
 
-timebox_options = [
-    selector.SelectOptionDict(value=x, label=x) for x in PREDEFINED_TIME_BOXES
+period_options = [
+    selector.SelectOptionDict(value=x, label=x) for x in PREDEFINED_PERIODS
 ]
 
-TIMEBOXES_SCHEMA = vol.Schema(
+PERIOD_SCHEMA = vol.Schema(
     {
-        vol.Optional("timeboxes"): selector.SelectSelector(
+        vol.Optional(CONF_PERIODS): selector.SelectSelector(
             selector.SelectSelectorConfig(
-                options=timebox_options,
+                options=period_options,
                 mode=selector.SelectSelectorMode.LIST,
                 multiple=True,
             )
@@ -79,14 +80,14 @@ CONFIG_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
     SENSOR_TYPE_SOURCE: SchemaFlowFormStep(
         SOURCE_CONFIG_SCHEMA,
         set_sensor_type(SENSOR_TYPE_SOURCE),
-        next_step=lambda x: "timeboxes",
+        next_step=lambda x: CONF_PERIODS,
     ),
     SENSOR_TYPE_TIME: SchemaFlowFormStep(
         GENERAL_CONFIG_SCHEMA,
         set_sensor_type(SENSOR_TYPE_TIME),
-        next_step=lambda x: "timeboxes",
+        next_step=lambda x: CONF_PERIODS,
     ),
-    "timeboxes": SchemaFlowFormStep(TIMEBOXES_SCHEMA),
+    CONF_PERIODS: SchemaFlowFormStep(PERIOD_SCHEMA),
 }
 
 

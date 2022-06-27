@@ -5,7 +5,7 @@ import logging
 from typing import List
 
 from custom_components.flexmeasure.const import CONF_SENSOR_TYPE
-from custom_components.flexmeasure.const import PREDEFINED_TIME_BOXES
+from custom_components.flexmeasure.const import PREDEFINED_PERIODS
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.components.sensor import SensorStateClass
@@ -18,14 +18,14 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import ATTR_NEXT_RESET
 from .const import ATTR_PREV
 from .const import ATTR_STATUS
+from .const import CONF_PERIODS
 from .const import CONF_TARGET
-from .const import CONF_TIMEBOXES
 from .const import DOMAIN_DATA
 from .const import ICON
 from .const import NAME
 from .const import SENSOR_TYPE_TIME
 from .coordinator import FlexMeasureCoordinator
-from .timebox import Timebox
+from .meter import Meter
 from .util import create_renderer
 
 _LOGGER: logging.Logger = logging.getLogger(__name__)
@@ -48,13 +48,13 @@ async def async_setup_entry(
 
     sensors: List[FlexMeasureSensor] = []
 
-    for box in config_entry.options[CONF_TIMEBOXES]:
+    for box in config_entry.options[CONF_PERIODS]:
         sensors.append(
             FlexMeasureSensor(
                 coordinator,
                 target_sensor_name,
                 sensor_type,
-                PREDEFINED_TIME_BOXES[box][NAME],
+                PREDEFINED_PERIODS[box][NAME],
                 value_template_renderer,
             )
         )
@@ -92,24 +92,24 @@ class FlexMeasureSensor(SensorEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        timebox: Timebox = self._coordinator.get_timebox(self._pattern_name)
+        meter: Meter = self._coordinator.get_meter(self._pattern_name)
 
-        state = timebox.state
-        prev_state = timebox.prev_state
+        measured_value = meter.measured_value
+        prev_measured_value = meter.prev_measured_value
         if self._sensor_type == SENSOR_TYPE_TIME:
-            state = round(state)
-            prev_state = round(prev_state)
+            measured_value = round(measured_value)
+            prev_measured_value = round(prev_measured_value)
         else:
-            state = round(state, 2)
-            prev_state = round(prev_state, 2)
+            measured_value = round(measured_value, 2)
+            prev_measured_value = round(prev_measured_value, 2)
 
-        self._attr_native_value = self._value_template_renderer(state)
-        self._attr_extra_state_attributes[ATTR_STATUS] = self._coordinator.status
+        self._attr_native_value = self._value_template_renderer(measured_value)
+        self._attr_extra_state_attributes[ATTR_STATUS] = meter.state.name
         self._attr_extra_state_attributes[ATTR_PREV] = self._value_template_renderer(
-            prev_state
+            prev_measured_value
         )
-        self._attr_last_reset = timebox.last_reset
-        self._attr_extra_state_attributes[ATTR_NEXT_RESET] = timebox.next_reset
+        self._attr_last_reset = meter.last_reset
+        self._attr_extra_state_attributes[ATTR_NEXT_RESET] = meter.next_reset
         self.async_set_context(self._coordinator._context)
 
         self.async_write_ha_state()
