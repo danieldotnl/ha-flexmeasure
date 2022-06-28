@@ -50,7 +50,11 @@ class FlexMeasureCoordinator:
 
     async def async_init(self):
         await self._async_from_storage()
+        if not self._template:
+            for meter in self.meters:
+                meter.disable_template()
 
+    async def async_start(self):
         if self._template:
             result = async_track_template_result(
                 self._hass,
@@ -58,9 +62,6 @@ class FlexMeasureCoordinator:
                 self._async_on_template_update,
             )
             result.async_refresh()
-        else:
-            for meter in self.meters:
-                meter.disable_template()
 
         await self.async_on_heartbeat()
 

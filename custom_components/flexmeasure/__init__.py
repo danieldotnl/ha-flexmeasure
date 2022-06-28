@@ -99,15 +99,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     coordinator = FlexMeasureCoordinator(
         hass, config_name, store, meters, activation_template, value_callback
     )
+    await coordinator.async_init()
 
     @callback
-    async def run_init(event):
-        await coordinator.async_init()
+    async def run_start(event):
+        await coordinator.async_start()
 
     if not hass.state == CoreState.running:
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, run_init)
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, run_start)
     else:
-        await run_init(None)
+        await run_start(None)
 
     hass.data.setdefault(DOMAIN_DATA, {})[entry.entry_id] = coordinator
     hass.config_entries.async_setup_platforms(entry, ([Platform.SENSOR]))
