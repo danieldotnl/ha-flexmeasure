@@ -104,7 +104,7 @@ class FlexMeasureSensor(SensorEntity):
             prev_measured_value = round(prev_measured_value, 2)
 
         self._attr_native_value = self._value_template_renderer(measured_value)
-        self._attr_extra_state_attributes[ATTR_STATUS] = meter.state.name
+        self._attr_extra_state_attributes[ATTR_STATUS] = meter.state
         self._attr_extra_state_attributes[ATTR_PREV] = self._value_template_renderer(
             prev_measured_value
         )
