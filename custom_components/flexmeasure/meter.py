@@ -11,7 +11,7 @@ from .period import Period
 # _LOGGER: logging.Logger = logging.getLogger(__package__)
 
 
-class MeterState(Enum):
+class MeterState(str, Enum):
     MEASURING = "measuring"
     WAITING_FOR_TEMPLATE = "waiting for template"
     WAITING_FOR_PERIOD = "waiting for period start"

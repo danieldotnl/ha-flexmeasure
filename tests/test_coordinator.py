@@ -44,4 +44,4 @@ async def test_without_template(hass: HomeAssistant):
     coordinator: FlexMeasureCoordinator = hass.data[DOMAIN_DATA][entry.entry_id]
     await coordinator.async_init()
 
-    # assert coordinator.status == STATUS_MEASURING
+    assert coordinator._meters["day"].state == MeterState.MEASURING

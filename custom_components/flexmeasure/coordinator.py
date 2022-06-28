@@ -49,7 +49,7 @@ class FlexMeasureCoordinator:
         self.last_update_value = None
 
     async def async_init(self):
-        await self._from_storage()
+        await self._async_from_storage()
 
         if self._template:
             result = async_track_template_result(
@@ -121,7 +121,7 @@ class FlexMeasureCoordinator:
                 meter.on_heartbeat(tznow, input_value)
 
         self._update_listeners()
-        await self._to_storage()
+        await self._async_to_storage()
 
     @callback
     async def async_on_heartbeat(self, now: datetime | None = None):
@@ -168,7 +168,7 @@ class FlexMeasureCoordinator:
         else:
             return float(value)
 
-    async def _from_storage(self):
+    async def _async_from_storage(self):
         try:
             stored_data = await self._store.async_load()
             if stored_data:
@@ -181,7 +181,7 @@ class FlexMeasureCoordinator:
                 ex,
             )
 
-    async def _to_storage(self) -> None:
+    async def _async_to_storage(self) -> None:
         try:
             data = {}
             for meter in self.meters:

@@ -1,3 +1,4 @@
+import json
 from datetime import datetime
 from datetime import timedelta
 
@@ -91,6 +92,14 @@ def test_serializing(meter: Meter):
     meter2.on_template_change(fake_now, 150, False)
     assert meter2.state == MeterState.WAITING_FOR_TEMPLATE
     assert meter2.measured_value == 27
+
+    # serialize to json
+    data = Meter.to_dict(meter2)
+    json_data = json.dumps(data, indent=4)
+    assert json_data
+
+    json_data2 = json.loads(json_data)
+    assert json_data2["measured_value"] == 27
 
 
 def test_meter_with_duration(duration_meter: Meter):
