@@ -3,34 +3,69 @@
     "step": {
       "user": {
         "title": "Choose what you want to measure",
-        "description": "Time measures the duration of a template rendering to True. Source will measure the value changes of another sensor, while a template is rendering to True",
+        "description": "Time measures the duration of a template rendering to True. Source will measure the value changes of another entity, while a template is rendering to True",
         "menu_options": {
-          "source": "Source entity",
+          "source": "Source",
           "time": "Time"
         }
       },
       "source": {
-        "title": "Configure FlexMeasure settings",
-        "description": "Configure FlexMeasure settings",
+        "title": "Configure source meter",
+        "description": "Configure the configuration name (used for sensor names and logging), the source to measure and the template that will trigger measuring.",
         "data": {
-          "source_sensor": "The source sensor:",
-          "activation_template": "Measure when this template renders 'True' (omit to always measure):",
-          "target_sensor": "The output sensors names start with:",
-          "value_template": "Render the output with a template:"
+          "name": "Configuration name",
+          "source_entity": "Source sensor",
+          "trigger_template": "Trigger template (omit to always measure)",
+          "unit_of_measurement": "Unit of measurement",
+          "value_template": "Value template"
         }
       },
       "time": {
-        "title": "Configure a time sensor",
-        "description": "Configure the name of the sensor and the template that will trigger measuring.",
+        "title": "Configure time meter",
+        "description": "Configure the configuration name (used for sensor names and logging), and the template that will trigger measuring.",
         "data": {
-          "activation_template": "Measure when this template renders 'True' (omit to always measure):",
-          "target_sensor": "The output sensors names start with:",
-          "value_template": "Render the output with a template:"
+          "name": "Config name",
+          "trigger_template": "Trigger template (omit to always measure)",
+          "unit_of_measurement": "Unit of measurement",
+          "value_template": "Value template"
         }
       },
       "periods": {
-        "title": "Choose what periods you want to measure",
-        "description": "For each selected period, a different sensor will be created which resets when the period is over."
+        "title": "Choose period configurator",
+        "description": "Choose how you want to configure periods. Combinations are possible. After that, choose \"I'm done\"",
+        "menu_options": {
+          "predefined": "Predefined periods",
+          "custom": "Custom (advanced)",
+          "done": "I'm done"
+        }
+      },
+      "predefined": {
+        "title": "Configure the period to measure",
+        "description": "Pick a predefined period or create a custom one (with duration). Each period becomes a sensor. When finished choose: I'm done.",
+        "menu_options": {
+          "5m": "5 Minutes",
+          "hour": "Hour",
+          "day": "Day",
+          "week": "Week",
+          "month": "Month",
+          "year": "Year",
+          "custom": "Custom (advanced)",
+          "done": "I'm done"
+        }
+      },
+      "custom": {
+        "title": "Configure a custom period",
+        "description": "Configure a recurrence and duration of a custom period.",
+        "data": {
+          "name": "Period name",
+          "cron": "Cron pattern",
+          "duration": "Duration",
+          "unit_of_measurement": "Unit of measurement",
+          "value_template": "Value template"
+        },
+        "errors": {
+          "invalid cron pattern": "Cron pattern is invalid"
+        }
       }
     }
   }

@@ -8,28 +8,29 @@ import logging
 
 import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_NAME
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.const import Platform
 from homeassistant.core import callback
 from homeassistant.core import Config
 from homeassistant.core import CoreState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.template import Template
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_PERIODS
-from .const import CONF_SENSOR_TYPE
+from .const import CONF_CRON
+from .const import CONF_DURATION
+from .const import CONF_METER_TYPE
+from .const import CONF_SENSORS
 from .const import CONF_SOURCE
-from .const import CONF_TARGET
 from .const import CONF_TEMPLATE
 from .const import DOMAIN
 from .const import DOMAIN_DATA
-from .const import PATTERN
-from .const import PREDEFINED_PERIODS
-from .const import SENSOR_TYPE_SOURCE
-from .const import SENSOR_TYPE_TIME
+from .const import METER_TYPE_SOURCE
+from .const import METER_TYPE_TIME
 from .coordinator import FlexMeasureCoordinator
 from .meter import Meter
 from .period import Period
@@ -48,9 +49,9 @@ async def async_setup(hass: HomeAssistant, config: Config):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up this integration using UI."""
 
-    config_name: str = entry.options[CONF_TARGET]
-    sensor_type: str = entry.options[CONF_SENSOR_TYPE]
-    activation_template: str | None = entry.options.get(CONF_TEMPLATE)
+    config_name: str = entry.options[CONF_NAME]
+    meter_type: str = entry.options[CONF_METER_TYPE]
+    trigger_template: str | None = entry.options.get(CONF_TEMPLATE)
 
     def get_time_value():
         return dt_util.utcnow().timestamp()
@@ -58,9 +59,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     def get_source_value():
         return hass.states.get(source_entity).state
 
-    if sensor_type == SENSOR_TYPE_TIME:
+    if meter_type == METER_TYPE_TIME:
         value_callback = get_time_value
-    elif sensor_type == SENSOR_TYPE_SOURCE:
+    elif meter_type == METER_TYPE_SOURCE:
 
         registry = er.async_get(hass)
 
@@ -79,9 +80,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
         value_callback = get_source_value
 
-    if activation_template:
-        activation_template = Template(activation_template)
-        activation_template.ensure_valid()
+    if trigger_template:
+        trigger_template = Template(trigger_template)
+        trigger_template.ensure_valid()
 
     store = Store(
         hass,
@@ -92,12 +93,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     meters = {}
     now = dt_util.now()
 
-    for name in entry.options[CONF_PERIODS]:
-        period = Period(PREDEFINED_PERIODS[name][PATTERN], now)
-        meters[name] = Meter(f"{config_name}_{name}", period)
+    for sensor in entry.options[CONF_SENSORS]:
+        duration = None
+        if sensor.get(CONF_DURATION):
+            duration = cv.time_period_dict(sensor.get(CONF_DURATION))
+        period = Period(sensor[CONF_CRON], now, duration)
+        meters[sensor[CONF_NAME]] = Meter(f"{config_name}_{sensor[CONF_NAME]}", period)
 
     coordinator = FlexMeasureCoordinator(
-        hass, config_name, store, meters, activation_template, value_callback
+        hass, config_name, store, meters, trigger_template, value_callback
     )
     await coordinator.async_init()
 

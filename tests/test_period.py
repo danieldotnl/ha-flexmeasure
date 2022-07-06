@@ -3,7 +3,6 @@ from datetime import timedelta
 
 import pytest
 import pytz
-from custom_components.flexmeasure.const import PATTERN
 from custom_components.flexmeasure.const import PREDEFINED_PERIODS
 from custom_components.flexmeasure.period import Period
 
@@ -15,7 +14,7 @@ def test_init():
     tznow = TZ.localize(fake_now)
 
     # full day period
-    start_pattern = PREDEFINED_PERIODS["day"][PATTERN]
+    start_pattern = PREDEFINED_PERIODS["day"]
     period = Period(start_pattern, tznow)
     assert period.start == TZ.localize(datetime(2022, 1, 1, 0, 0))
     assert period.end == period.start + timedelta(days=1)
@@ -36,7 +35,7 @@ def test_update_period_without_duration():
     fake_now = datetime(2022, 1, 1, 10, 30)
     tznow1 = TZ.localize(fake_now)
 
-    start_pattern = PREDEFINED_PERIODS["day"][PATTERN]
+    start_pattern = PREDEFINED_PERIODS["day"]
     period = Period(start_pattern, tznow1)
     assert period.active is True
 
@@ -77,7 +76,7 @@ def test_update_period_with_duration():
     fake_now = datetime(2022, 1, 1, 10, 30)
     tznow1 = TZ.localize(fake_now)
 
-    start_pattern = PREDEFINED_PERIODS["day"][PATTERN]
+    start_pattern = PREDEFINED_PERIODS["day"]
     period = Period(start_pattern, tznow1, timedelta(hours=12))
     assert period.active is True
 

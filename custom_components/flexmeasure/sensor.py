@@ -4,12 +4,11 @@ from __future__ import annotations
 import logging
 from typing import List
 
-from custom_components.flexmeasure.const import CONF_SENSOR_TYPE
-from custom_components.flexmeasure.const import PREDEFINED_PERIODS
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.components.sensor import SensorStateClass
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_NAME
 from homeassistant.const import CONF_VALUE_TEMPLATE
 from homeassistant.core import callback
 from homeassistant.core import HomeAssistant
@@ -18,12 +17,11 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import ATTR_NEXT_RESET
 from .const import ATTR_PREV
 from .const import ATTR_STATUS
-from .const import CONF_PERIODS
-from .const import CONF_TARGET
+from .const import CONF_METER_TYPE
+from .const import CONF_SENSORS
 from .const import DOMAIN_DATA
 from .const import ICON
-from .const import NAME
-from .const import SENSOR_TYPE_TIME
+from .const import METER_TYPE_TIME
 from .coordinator import FlexMeasureCoordinator
 from .meter import Meter
 from .util import create_renderer
@@ -38,8 +36,8 @@ async def async_setup_entry(
 ) -> None:
     """Setup sensor platform."""
     entry_id: str = config_entry.entry_id
-    sensor_type: str = config_entry.options[CONF_SENSOR_TYPE]
-    target_sensor_name: str = config_entry.options[CONF_TARGET]
+    meter_type: str = config_entry.options[CONF_METER_TYPE]
+    target_sensor_name: str = config_entry.options[CONF_NAME]
     value_template_renderer = create_renderer(
         hass, config_entry.options.get(CONF_VALUE_TEMPLATE)
     )
@@ -48,13 +46,13 @@ async def async_setup_entry(
 
     sensors: List[FlexMeasureSensor] = []
 
-    for box in config_entry.options[CONF_PERIODS]:
+    for sensor in config_entry.options[CONF_SENSORS]:
         sensors.append(
             FlexMeasureSensor(
                 coordinator,
                 target_sensor_name,
-                sensor_type,
-                PREDEFINED_PERIODS[box][NAME],
+                meter_type,
+                sensor[CONF_NAME],
                 value_template_renderer,
             )
         )
@@ -67,11 +65,11 @@ class FlexMeasureSensor(SensorEntity):
         self,
         coordinator,
         sensor_name,
-        sensor_type,
+        meter_type,
         pattern_name,
         value_template_renderer,
     ):
-        self._sensor_type = sensor_type
+        self._meter_type = meter_type
         self._coordinator: FlexMeasureCoordinator = coordinator
         self._pattern_name = pattern_name
         self._attr_name = f"{sensor_name}_{pattern_name}"
@@ -81,7 +79,7 @@ class FlexMeasureSensor(SensorEntity):
         self._value_template_renderer = value_template_renderer
         self._attr_state_class = SensorStateClass.TOTAL
 
-        if self._sensor_type == SENSOR_TYPE_TIME:
+        if self._meter_type == METER_TYPE_TIME:
             self._attr_device_class = SensorDeviceClass.DURATION
 
     async def async_added_to_hass(self):
@@ -96,7 +94,7 @@ class FlexMeasureSensor(SensorEntity):
 
         measured_value = meter.measured_value
         prev_measured_value = meter.prev_measured_value
-        if self._sensor_type == SENSOR_TYPE_TIME:
+        if self._meter_type == METER_TYPE_TIME:
             measured_value = round(measured_value)
             prev_measured_value = round(prev_measured_value)
         else:

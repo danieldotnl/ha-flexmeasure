@@ -7,8 +7,6 @@ from homeassistant import config_entries
 from homeassistant import data_entry_flow
 
 from .const import MOCK_TIME_CONFIG_FINAL
-from .const import MOCK_TIME_CONFIG_FORM
-from .const import MOCK_TIMEBOX_CONFIG
 
 # from pytest_homeassistant_custom_component.common import MockConfigEntry
 
@@ -48,19 +46,35 @@ async def test_successful_config_flow(hass):
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     # Fill form name and template
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=MOCK_TIME_CONFIG_FORM
+        result["flow_id"], user_input={"name": "test_configname"}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_MENU
+    assert result["step_id"] == "periods"
+
+    # Choose config for a predefined period
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "predefined"}
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    # Check the timeboxes
+    # Fill form name and template
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=MOCK_TIMEBOX_CONFIG
+        result["flow_id"], user_input={"periods": ["day", "year"]}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_MENU
+    assert result["step_id"] == "periods"
+
+    # Choose I'm done
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "done"}
     )
 
     # Check that the config flow is complete and a new entry is created with
     # the input data
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "test_target"
+    assert result["title"] == "test_configname"
     assert result["options"] == MOCK_TIME_CONFIG_FINAL
     assert result["result"]
 

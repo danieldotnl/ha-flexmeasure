@@ -25,28 +25,33 @@ SERVICE_STOP = "stop"
 
 # Configuration and options
 CONF_ENABLED = "enabled"
-CONF_SENSOR_TYPE = "Sensor type"
-CONF_SOURCE = "source_sensor"
-CONF_TEMPLATE = "activation_template"
+CONF_METER_TYPE = "meter_type"
+CONF_SOURCE = "source_entity"
+CONF_TEMPLATE = "trigger_template"
 CONF_TARGET = "target_sensor"
 CONF_METERS = "meters"
 CONF_PERIODS = "periods"
+CONF_DURATION = "duration"
+CONF_CRON = "cron"
+CONF_PERIOD = "period"
+CONF_SENSORS = "sensors"
+CONF_STATE_CLASS = "state_class"
 
-SENSOR_TYPE_TIME = "time"
-SENSOR_TYPE_SOURCE = "source"
+METER_TYPE_TIME = "time"
+METER_TYPE_SOURCE = "source"
 
 # Time boxes
 NAME = "name"
 PATTERN = "pattern"
 
 PREDEFINED_PERIODS = {
-    "5m": {NAME: "5m", PATTERN: "*/5 * * * *"},
-    "hour": {NAME: "hour", PATTERN: "0 * * * *"},
-    "day": {NAME: "day", PATTERN: "0 0 * * *"},
-    "week": {NAME: "week", PATTERN: "0 0 * * 1"},
-    "month": {NAME: "month", PATTERN: "0 0 1 * *"},
-    "year": {NAME: "year", PATTERN: "0 0 1 1 *"},
-    "custom": "custom",
+    "5m": "*/5 * * * *",
+    "hour": "0 * * * *",
+    "day": "0 0 * * *",
+    "week": "0 0 * * 1",
+    "month": "0 0 1 * *",
+    "year": "0 0 1 1 *",
+    "none": "59 59 23 31 12 ? 2099",
 }
 
 
