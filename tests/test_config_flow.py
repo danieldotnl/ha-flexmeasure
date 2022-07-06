@@ -49,6 +49,11 @@ async def test_successful_config_flow(hass):
         result["flow_id"], user_input={"name": "test_configname"}
     )
 
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"when_from": "00:00:00", "when_till": "20:00:00"}
+    )
+
     assert result["type"] == data_entry_flow.RESULT_TYPE_MENU
     assert result["step_id"] == "periods"
 

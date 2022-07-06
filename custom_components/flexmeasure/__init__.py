@@ -21,12 +21,12 @@ from homeassistant.helpers.storage import Store
 from homeassistant.helpers.template import Template
 from homeassistant.util import dt as dt_util
 
+from .const import CONF_CONDITION
 from .const import CONF_CRON
 from .const import CONF_DURATION
 from .const import CONF_METER_TYPE
 from .const import CONF_SENSORS
 from .const import CONF_SOURCE
-from .const import CONF_TEMPLATE
 from .const import DOMAIN
 from .const import DOMAIN_DATA
 from .const import METER_TYPE_SOURCE
@@ -51,7 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     config_name: str = entry.options[CONF_NAME]
     meter_type: str = entry.options[CONF_METER_TYPE]
-    trigger_template: str | None = entry.options.get(CONF_TEMPLATE)
+    condition: str | None = entry.options.get(CONF_CONDITION)
 
     def get_time_value():
         return dt_util.utcnow().timestamp()
@@ -80,9 +80,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
         value_callback = get_source_value
 
-    if trigger_template:
-        trigger_template = Template(trigger_template)
-        trigger_template.ensure_valid()
+    if condition:
+        condition = Template(condition)
+        condition.ensure_valid()
 
     store = Store(
         hass,
@@ -101,7 +101,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         meters[sensor[CONF_NAME]] = Meter(f"{config_name}_{sensor[CONF_NAME]}", period)
 
     coordinator = FlexMeasureCoordinator(
-        hass, config_name, store, meters, trigger_template, value_callback
+        hass, config_name, store, meters, condition, value_callback
     )
     await coordinator.async_init()
 

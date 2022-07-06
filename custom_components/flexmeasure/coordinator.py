@@ -35,14 +35,14 @@ class FlexMeasureCoordinator:
         config_name: str,
         store: Store,
         meters: List[Meter],
-        template: Template | None,
+        condition: Template | None,
         value_callback: Callable[[str], NumberType],
     ) -> None:
         self._hass: HomeAssistant = hass
         self._name: str = config_name
         self._store: Store = store
         self._meters: dict[str, Meter] = meters
-        self._template: Template | None = template
+        self._condition: Template | None = condition
         self._get_value: Callable[[str], NumberType] = value_callback
         self._listeners: dict[CALLBACK_TYPE, tuple[CALLBACK_TYPE, object | None]] = {}
         self._context = None
@@ -50,15 +50,15 @@ class FlexMeasureCoordinator:
 
     async def async_init(self):
         await self._async_from_storage()
-        if not self._template:
+        if not self._condition:
             for meter in self.meters:
                 meter.disable_template()
 
     async def async_start(self):
-        if self._template:
+        if self._condition:
             result = async_track_template_result(
                 self._hass,
-                [TrackTemplate(self._template, None)],
+                [TrackTemplate(self._condition, None)],
                 self._async_on_template_update,
             )
             result.async_refresh()
@@ -89,7 +89,7 @@ class FlexMeasureCoordinator:
     async def _async_update_meters(self, template_result: bool | None = None):
         tznow = dt_util.now()
         trigger = (
-            f"template changed to {template_result}"
+            f"condition changed to {template_result}"
             if template_result is not None
             else "update interval"
         )

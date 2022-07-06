@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import logging
 
+import homeassistant.util.dt as dt_util
 import voluptuous as vol
 from croniter import croniter
 from homeassistant import config_entries
@@ -13,13 +14,16 @@ from homeassistant.helpers import selector
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.template import TemplateError
 
+from .const import CONF_CONDITION
 from .const import CONF_CRON
 from .const import CONF_DURATION
 from .const import CONF_METER_TYPE
 from .const import CONF_PERIODS
 from .const import CONF_SENSORS
 from .const import CONF_SOURCE
-from .const import CONF_TEMPLATE
+from .const import CONF_WHENDAYS
+from .const import CONF_WHENFROM
+from .const import CONF_WHENTILL
 from .const import DOMAIN
 from .const import METER_TYPE_SOURCE
 from .const import METER_TYPE_TIME
@@ -39,6 +43,17 @@ PERIOD_OPTIONS = [
     selector.SelectOptionDict(value="month", label="month"),
     selector.SelectOptionDict(value="year", label="year"),
 ]
+
+DAY_OPTIONS = [
+    selector.SelectOptionDict(value="0", label="monday"),
+    selector.SelectOptionDict(value="1", label="tuesday"),
+    selector.SelectOptionDict(value="2", label="wednesday"),
+    selector.SelectOptionDict(value="3", label="thursday"),
+    selector.SelectOptionDict(value="4", label="friday"),
+    selector.SelectOptionDict(value="5", label="saturday"),
+    selector.SelectOptionDict(value="6", label="sunday"),
+]
+DEFAULT_DAYS = ["0", "1", "2", "3", "4", "5", "6"]
 
 
 class FlexMeasureConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -67,27 +82,23 @@ class FlexMeasureConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_time(self, user_input=None):
         errors = {}
         if user_input is not None:
-            if not self.is_valid_template(user_input.get(CONF_TEMPLATE)):
-                errors[CONF_TEMPLATE] = "invalid template"
             if not self.is_valid_template(user_input.get(CONF_VALUE_TEMPLATE)):
                 errors[CONF_VALUE_TEMPLATE] = "invalid template"
 
             if not errors:
                 self._data[CONF_METER_TYPE] = METER_TYPE_TIME
                 self._data[CONF_NAME] = user_input[CONF_NAME]
-                self._data[CONF_TEMPLATE] = user_input.get(CONF_TEMPLATE)
                 self._sensor_config[CONF_UNIT_OF_MEASUREMENT] = user_input.get(
                     CONF_UNIT_OF_MEASUREMENT
                 )
                 self._sensor_config[CONF_VALUE_TEMPLATE] = user_input.get(
                     CONF_VALUE_TEMPLATE
                 )
-                return await self.async_step_periods()
+                return await self.async_step_when()
 
         schema = vol.Schema(
             {
                 vol.Required(CONF_NAME): selector.TextSelector(),
-                vol.Optional(CONF_TEMPLATE): selector.TemplateSelector(),
                 vol.Optional(CONF_UNIT_OF_MEASUREMENT): selector.TextSelector(),
                 vol.Optional(CONF_VALUE_TEMPLATE): selector.TemplateSelector(),
             }
@@ -97,15 +108,12 @@ class FlexMeasureConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_source(self, user_input=None):
         errors = {}
         if user_input is not None:
-            if not self.is_valid_template(user_input.get(CONF_TEMPLATE)):
-                errors[CONF_TEMPLATE] = "invalid template"
             if not self.is_valid_template(user_input.get(CONF_VALUE_TEMPLATE)):
                 errors[CONF_VALUE_TEMPLATE] = "invalid template"
 
             if not errors:
                 self._data[CONF_METER_TYPE] = METER_TYPE_SOURCE
                 self._data[CONF_NAME] = user_input[CONF_NAME]
-                self._data[CONF_TEMPLATE] = user_input.get(CONF_TEMPLATE)
                 self._data[CONF_SOURCE] = user_input[CONF_SOURCE]
                 self._sensor_config[CONF_UNIT_OF_MEASUREMENT] = user_input.get(
                     CONF_UNIT_OF_MEASUREMENT
@@ -113,18 +121,52 @@ class FlexMeasureConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._sensor_config[CONF_VALUE_TEMPLATE] = user_input.get(
                     CONF_VALUE_TEMPLATE
                 )
-                return await self.async_step_periods()
+                return await self.async_step_when()
 
         schema = vol.Schema(
             {
                 vol.Required(CONF_NAME): selector.TextSelector(),
                 vol.Required(CONF_SOURCE): selector.EntitySelector(),
-                vol.Optional(CONF_TEMPLATE): selector.TemplateSelector(),
                 vol.Optional(CONF_UNIT_OF_MEASUREMENT): selector.TextSelector(),
                 vol.Optional(CONF_VALUE_TEMPLATE): selector.TemplateSelector(),
             }
         )
         return self.async_show_form(step_id="source", data_schema=schema, errors=errors)
+
+    async def async_step_when(self, user_input=None):
+        errors = {}
+        _LOGGER.debug("User input: %s", user_input)
+
+        if user_input is not None:
+            if not self.is_valid_template(user_input.get(CONF_CONDITION)):
+                errors[CONF_CONDITION] = "invalid template"
+
+            whenfrom = dt_util.parse_time(user_input[CONF_WHENFROM])
+            whentill = dt_util.parse_time(user_input[CONF_WHENTILL])
+            if whentill < whenfrom:
+                errors[CONF_WHENTILL] = "invalid_till"
+
+            if not errors:
+                self._data.update(user_input)
+                return await self.async_step_periods()
+
+        schema = vol.Schema(
+            {
+                vol.Optional(CONF_CONDITION): selector.TemplateSelector(),
+                vol.Optional(
+                    CONF_WHENDAYS, default=DEFAULT_DAYS
+                ): selector.SelectSelector(
+                    selector.SelectSelectorConfig(
+                        options=DAY_OPTIONS,
+                        multiple=True,
+                        mode=selector.SelectSelectorMode.LIST,
+                    ),
+                ),
+                vol.Required(CONF_WHENFROM): selector.TimeSelector(),
+                vol.Required(CONF_WHENTILL): selector.TimeSelector(),
+            }
+        )
+        return self.async_show_form(step_id="when", data_schema=schema, errors=errors)
 
     async def async_step_periods(self, user_input=None):
         return self.async_show_menu(step_id="periods", menu_options=PERIOD_MENU)

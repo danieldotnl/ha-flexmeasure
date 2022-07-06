@@ -11,23 +11,34 @@
       },
       "source": {
         "title": "Configure source meter",
-        "description": "Configure the configuration name (used for sensor names and logging), the source to measure and the template that will trigger measuring.",
+        "description": "Configure the configuration name (used for sensor names and logging), the source to measure and the unit of the measurement..",
         "data": {
           "name": "Configuration name",
           "source_entity": "Source sensor",
-          "trigger_template": "Trigger template (omit to always measure)",
           "unit_of_measurement": "Unit of measurement",
           "value_template": "Value template"
         }
       },
       "time": {
         "title": "Configure time meter",
-        "description": "Configure the configuration name (used for sensor names and logging), and the template that will trigger measuring.",
+        "description": "Configure the configuration name (used for sensor names and logging) and the unit of the measurement.",
         "data": {
           "name": "Config name",
-          "trigger_template": "Trigger template (omit to always measure)",
           "unit_of_measurement": "Unit of measurement",
           "value_template": "Value template"
+        }
+      },
+      "when": {
+        "title": "Choose when to measure",
+        "description": "Configure an optional condition and/or the days and time when you want to measure. Default = always measure.",
+        "data": {
+          "condition": "Condition template",
+          "when_days": "Days:",
+          "when_from": "From time",
+          "when_till": "Till time"
+        },
+        "error": {
+          "invalid_till": "Till should be later than from."
         }
       },
       "periods": {
@@ -63,7 +74,7 @@
           "unit_of_measurement": "Unit of measurement",
           "value_template": "Value template"
         },
-        "errors": {
+        "error": {
           "invalid cron pattern": "Cron pattern is invalid"
         }
       }
