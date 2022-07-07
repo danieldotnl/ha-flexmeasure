@@ -46,7 +46,7 @@ class FlexMeasureCoordinator:
         self._get_value: Callable[[str], NumberType] = value_callback
         self._listeners: dict[CALLBACK_TYPE, tuple[CALLBACK_TYPE, object | None]] = {}
         self._context = None
-        self.last_update_value = None
+        self.last_reading = None
 
     async def async_init(self):
         await self._async_from_storage()
@@ -101,7 +101,8 @@ class FlexMeasureCoordinator:
         )
 
         try:
-            input_value = self._parse_value(self._get_value())
+            reading = self._parse_value(self._get_value())
+            self.last_reading = reading
         except ValueError as ex:
             _LOGGER.error(
                 "%s # Could not update meters because the input value is invalid. Error: %s",
@@ -109,17 +110,17 @@ class FlexMeasureCoordinator:
                 ex,
             )
             # set the input value to the last updated value, so the meters are at least reset when required
-            if self.last_update_value:
-                input_value = self.last_update_value
+            if self.last_reading:
+                reading = self.last_reading
             else:
                 return  # nothing we can do... we'll try again next time
 
         if template_result is not None:
             for meter in self.meters:
-                meter.on_template_change(tznow, input_value, template_result)
+                meter.on_template_change(tznow, reading, template_result)
         else:
             for meter in self.meters:
-                meter.on_heartbeat(tznow, input_value)
+                meter.on_heartbeat(tznow, reading)
 
         self._update_listeners()
         await self._async_to_storage()
