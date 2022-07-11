@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import logging
 
-import homeassistant.util.dt as dt_util
 import voluptuous as vol
 from croniter import croniter
 from homeassistant import config_entries
@@ -142,11 +141,6 @@ class FlexMeasureConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors[CONF_CONDITION] = "invalid_template"
             if not len(user_input.get(CONF_TW_DAYS)) > 0:
                 errors[CONF_TW_DAYS] = "at_least_one_day"
-
-            whenfrom = dt_util.parse_time(user_input[CONF_TW_FROM])
-            whentill = dt_util.parse_time(user_input[CONF_TW_TILL])
-            if whentill < whenfrom:
-                errors[CONF_TW_TILL] = "invalid_till"
 
             if not errors:
                 self._data.update(user_input)
