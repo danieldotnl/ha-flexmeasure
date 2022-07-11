@@ -1,6 +1,5 @@
 import json
 from datetime import datetime
-from datetime import timedelta
 
 import pytest
 import pytz
@@ -17,15 +16,6 @@ TZ = pytz.timezone("Europe/Amsterdam")
 def meter():
     fake_now = datetime(2022, 1, 1, 10, 30)
     period = Period(START_PATTERN, tznow=TZ.localize(fake_now))
-    return Meter(NAME, period)
-
-
-@pytest.fixture
-def duration_meter():
-    fake_now = datetime(2022, 1, 1, 10, 30)
-    period = Period(
-        START_PATTERN, tznow=TZ.localize(fake_now), duration=timedelta(hours=12)
-    )
     return Meter(NAME, period)
 
 
@@ -76,7 +66,7 @@ def test_template_update(meter: Meter):
 
     fake_now = TZ.localize(datetime(2022, 1, 1, 11, 6))
     meter.on_template_change(fake_now, 125, False, tw_active=True)
-    assert meter.state == MeterState.WAITING_FOR_TEMPLATE
+    assert meter.state == MeterState.WAITING_FOR_CONDITION
     assert meter.measured_value == 2
 
     fake_now = TZ.localize(datetime(2022, 1, 1, 11, 7))
@@ -106,7 +96,7 @@ def test_serializing(meter: Meter):
     assert meter2.measured_value == 7
 
     meter2.on_template_change(fake_now, 150, False, tw_active=True)
-    assert meter2.state == MeterState.WAITING_FOR_TEMPLATE
+    assert meter2.state == MeterState.WAITING_FOR_CONDITION
     assert meter2.measured_value == 27
 
     # serialize to json
@@ -116,23 +106,6 @@ def test_serializing(meter: Meter):
 
     json_data2 = json.loads(json_data)
     assert json_data2["measured_value"] == 27
-
-
-def test_meter_with_duration(duration_meter: Meter):
-    fake_now = TZ.localize(datetime(2022, 1, 1, 11, 8))
-    duration_meter.on_template_change(fake_now, 1000, tp_active=True, tw_active=True)
-
-    fake_now = TZ.localize(datetime(2022, 1, 2, 12, 8))
-    duration_meter.on_heartbeat(fake_now, 2000, True)
-    assert duration_meter.state == MeterState.WAITING_FOR_PERIOD
-    assert duration_meter.measured_value == 0
-    assert duration_meter.prev_measured_value == 1000
-
-    fake_now = TZ.localize(datetime(2022, 1, 3, 2, 8))
-    duration_meter.on_heartbeat(fake_now, 100, True)
-    assert duration_meter.state == MeterState.MEASURING
-    duration_meter.on_heartbeat(fake_now, 101, True)
-    assert duration_meter.measured_value == 1
 
 
 # def test_daylight_savings(meter):

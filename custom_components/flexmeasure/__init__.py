@@ -15,7 +15,6 @@ from homeassistant.core import callback
 from homeassistant.core import Config
 from homeassistant.core import CoreState
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.template import Template
@@ -23,7 +22,6 @@ from homeassistant.util import dt as dt_util
 
 from .const import CONF_CONDITION
 from .const import CONF_CRON
-from .const import CONF_DURATION
 from .const import CONF_METER_TYPE
 from .const import CONF_SENSORS
 from .const import CONF_SOURCE
@@ -104,10 +102,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     now = dt_util.now()
 
     for sensor in entry.options[CONF_SENSORS]:
-        duration = None
-        if sensor.get(CONF_DURATION):
-            duration = cv.time_period_dict(sensor.get(CONF_DURATION))
-        period = Period(sensor[CONF_CRON], now, duration)
+        period = Period(sensor[CONF_CRON], now)
         meters[sensor[CONF_NAME]] = Meter(f"{config_name}_{sensor[CONF_NAME]}", period)
 
     coordinator = FlexMeasureCoordinator(

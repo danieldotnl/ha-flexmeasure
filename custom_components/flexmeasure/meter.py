@@ -13,8 +13,7 @@ from .period import Period
 
 class MeterState(str, Enum):
     MEASURING = "measuring"
-    WAITING_FOR_TEMPLATE = "waiting for condition"
-    WAITING_FOR_PERIOD = "waiting for period start"
+    WAITING_FOR_CONDITION = "waiting for condition"
     WAITING_FOR_TIME_WINDOW = "waiting for time window"
 
 
@@ -61,18 +60,12 @@ class Meter:
         self._update_state(reading)
 
     def _update_state(self, reading: float) -> MeterState:
-        if (
-            self._period.active is True
-            and self._template_active is True
-            and self._time_window_active is True
-        ):
+        if self._template_active is True and self._time_window_active is True:
             new_state = MeterState.MEASURING
-        elif self._period.active is False:
-            new_state = MeterState.WAITING_FOR_PERIOD
         elif self._time_window_active is False:
             new_state = MeterState.WAITING_FOR_TIME_WINDOW
         elif self._template_active is False:
-            new_state = MeterState.WAITING_FOR_TEMPLATE
+            new_state = MeterState.WAITING_FOR_CONDITION
         else:
             raise ValueError("Invalid state determined.")
 
