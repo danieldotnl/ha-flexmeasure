@@ -1,5 +1,10 @@
 {
   "config": {
+    "error": {
+      "at_least_one_day": "Select at least one day to measure",
+      "invalid_template": "Condition template is invalid",
+      "invalid cron pattern": "Cron pattern is invalid"
+    },
     "step": {
       "user": {
         "title": "Choose what you want to measure",
@@ -36,10 +41,6 @@
           "when_days": "Days:",
           "when_from": "From time",
           "when_till": "Till time"
-        },
-        "error": {
-          "at_least_one_day": "Select at least one day to measure",
-          "invalid_template": "Condition template is invalid"
         }
       },
       "periods": {
@@ -74,9 +75,6 @@
           "duration": "Duration",
           "unit_of_measurement": "Unit of measurement",
           "value_template": "Value template"
-        },
-        "error": {
-          "invalid cron pattern": "Cron pattern is invalid"
         }
       }
     }
