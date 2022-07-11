@@ -31,7 +31,8 @@ from .const import PREDEFINED_PERIODS
 
 _LOGGER: logging.Logger = logging.getLogger(__name__)
 METER_TYPES_MENU = ["time", "source"]
-PERIOD_MENU = ["predefined", "custom", "done"]
+PERIOD_MENU = ["predefined", "custom"]
+PERIOD_MENU_DONE = ["predefined", "custom", "done"]
 
 PERIOD_OPTIONS = [
     # selector.SelectOptionDict(value="none", label="none (no reset)"),
@@ -165,6 +166,10 @@ class FlexMeasureConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(step_id="when", data_schema=schema, errors=errors)
 
     async def async_step_periods(self, user_input=None):
+        if len(self._data.get(CONF_SENSORS, 0)) > 0:
+            return self.async_show_menu(
+                step_id="periods", menu_options=PERIOD_MENU_DONE
+            )
         return self.async_show_menu(step_id="periods", menu_options=PERIOD_MENU)
 
     async def async_step_predefined(self, user_input=None):
@@ -225,6 +230,7 @@ class FlexMeasureConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_done(self, user_input=None):
         _LOGGER.debug("All stored data: %s", self._data)
+
         return self.async_create_entry(
             title=self._data[CONF_NAME], data={}, options=self._data
         )
