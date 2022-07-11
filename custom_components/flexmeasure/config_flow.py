@@ -15,7 +15,6 @@ from homeassistant.helpers.template import TemplateError
 
 from .const import CONF_CONDITION
 from .const import CONF_CRON
-from .const import CONF_DURATION
 from .const import CONF_METER_TYPE
 from .const import CONF_PERIODS
 from .const import CONF_SENSORS
@@ -219,9 +218,9 @@ class FlexMeasureConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             {
                 vol.Required(CONF_NAME): selector.TextSelector(),
                 vol.Required(CONF_CRON): selector.TextSelector(),
-                vol.Optional(CONF_DURATION): selector.DurationSelector(
-                    selector.DurationSelectorConfig(enable_day=True)
-                ),
+                # vol.Optional(CONF_DURATION): selector.DurationSelector(
+                #     selector.DurationSelectorConfig(enable_day=True)
+                # ),
                 vol.Optional(CONF_UNIT_OF_MEASUREMENT): selector.TextSelector(),
                 vol.Optional(CONF_VALUE_TEMPLATE): selector.TemplateSelector(),
             }
