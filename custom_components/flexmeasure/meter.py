@@ -13,7 +13,7 @@ from .period import Period
 
 class MeterState(str, Enum):
     MEASURING = "measuring"
-    WAITING_FOR_TEMPLATE = "waiting for template"
+    WAITING_FOR_TEMPLATE = "waiting for condition"
     WAITING_FOR_PERIOD = "waiting for period start"
     WAITING_FOR_TIME_WINDOW = "waiting for time window"
 

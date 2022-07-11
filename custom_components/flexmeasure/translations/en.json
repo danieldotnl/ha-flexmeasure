@@ -2,13 +2,13 @@
   "config": {
     "error": {
       "at_least_one_day": "Select at least one day to measure",
-      "invalid_template": "Condition template is invalid",
+      "invalid_template": "Invalid template",
       "invalid cron pattern": "Cron pattern is invalid"
     },
     "step": {
       "user": {
         "title": "Choose what you want to measure",
-        "description": "Time measures the duration of a template rendering to True. Source will measure the value changes of another entity, while a template is rendering to True",
+        "description": "Time measures the duration while a condition (template) equals true. Source will measure the value changes of another entity, while a condition (template) equals true.",
         "menu_options": {
           "source": "Source",
           "time": "Time"
@@ -35,7 +35,7 @@
       },
       "when": {
         "title": "Choose when to measure",
-        "description": "Configure an optional condition template and/or the days and time when you want to measure. Default: always measure. When the from time is later than the till time, it is assumed that the time window crosses midnight.",
+        "description": "Configure an optional condition (template) and/or the days and time when you want to measure. Default: always measure. When the from time is later than the till time, it is assumed that the time window crosses midnight.",
         "data": {
           "condition": "Condition template",
           "when_days": "Days:",

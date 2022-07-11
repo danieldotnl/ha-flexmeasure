@@ -64,15 +64,7 @@ DEFAULT_NAME = DOMAIN
 # Attributes
 ATTR_PREV = "prev_period"
 ATTR_NEXT_RESET = "next_reset"
-
-# Statuses
 ATTR_STATUS = "status"
-STATUS_MEASURING = "measuring"
-STATUS_INACTIVE = "inactive"
-STATUS_WAIT_SCHEDULE = "wait for schedule"
-STATUS_WAIT_TEMPLATE = "wait for template"
-STATUS_ERROR = "error"
-STATUSES = [STATUS_MEASURING, STATUS_INACTIVE]
 
 
 STARTUP_MESSAGE = f"""
