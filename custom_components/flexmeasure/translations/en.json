@@ -30,7 +30,7 @@
       },
       "when": {
         "title": "Choose when to measure",
-        "description": "Configure an optional condition and/or the days and time when you want to measure. Default = always measure.",
+        "description": "Configure an optional condition template and/or the days and time when you want to measure. Default: always measure. When the from time is later than the till time, it is assumed that the time window crosses midnight.",
         "data": {
           "condition": "Condition template",
           "when_days": "Days:",
@@ -38,7 +38,8 @@
           "when_till": "Till time"
         },
         "error": {
-          "invalid_till": "Till should be later than from."
+          "at_least_one_day": "Select at least one day to measure",
+          "invalid_template": "Condition template is invalid"
         }
       },
       "periods": {

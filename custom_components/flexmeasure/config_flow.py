@@ -21,9 +21,9 @@ from .const import CONF_METER_TYPE
 from .const import CONF_PERIODS
 from .const import CONF_SENSORS
 from .const import CONF_SOURCE
-from .const import CONF_WHENDAYS
-from .const import CONF_WHENFROM
-from .const import CONF_WHENTILL
+from .const import CONF_TW_DAYS
+from .const import CONF_TW_FROM
+from .const import CONF_TW_TILL
 from .const import DOMAIN
 from .const import METER_TYPE_SOURCE
 from .const import METER_TYPE_TIME
@@ -63,13 +63,13 @@ class FlexMeasureConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._data = {}
         self._data[CONF_SENSORS] = []
 
-    def is_valid_cron(self, input: str) -> bool:
-        return croniter.is_valid(input)
+    def is_valid_cron(self, value: str) -> bool:
+        return croniter.is_valid(value)
 
-    def is_valid_template(self, input: str) -> bool:
-        if not input:
+    def is_valid_template(self, value: str) -> bool:
+        if not value:
             return True
-        template = Template(input)
+        template = Template(value)
         try:
             template.ensure_valid()
             return True
@@ -139,12 +139,14 @@ class FlexMeasureConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             if not self.is_valid_template(user_input.get(CONF_CONDITION)):
-                errors[CONF_CONDITION] = "invalid template"
+                errors[CONF_CONDITION] = "invalid_template"
+            if not len(user_input.get(CONF_TW_DAYS)) > 0:
+                errors[CONF_TW_DAYS] = "at_least_one_day"
 
-            whenfrom = dt_util.parse_time(user_input[CONF_WHENFROM])
-            whentill = dt_util.parse_time(user_input[CONF_WHENTILL])
+            whenfrom = dt_util.parse_time(user_input[CONF_TW_FROM])
+            whentill = dt_util.parse_time(user_input[CONF_TW_TILL])
             if whentill < whenfrom:
-                errors[CONF_WHENTILL] = "invalid_till"
+                errors[CONF_TW_TILL] = "invalid_till"
 
             if not errors:
                 self._data.update(user_input)
@@ -154,7 +156,7 @@ class FlexMeasureConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             {
                 vol.Optional(CONF_CONDITION): selector.TemplateSelector(),
                 vol.Optional(
-                    CONF_WHENDAYS, default=DEFAULT_DAYS
+                    CONF_TW_DAYS, default=DEFAULT_DAYS
                 ): selector.SelectSelector(
                     selector.SelectSelectorConfig(
                         options=DAY_OPTIONS,
@@ -162,8 +164,8 @@ class FlexMeasureConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         mode=selector.SelectSelectorMode.LIST,
                     ),
                 ),
-                vol.Required(CONF_WHENFROM): selector.TimeSelector(),
-                vol.Required(CONF_WHENTILL): selector.TimeSelector(),
+                vol.Required(CONF_TW_FROM): selector.TimeSelector(),
+                vol.Required(CONF_TW_TILL): selector.TimeSelector(),
             }
         )
         return self.async_show_form(step_id="when", data_schema=schema, errors=errors)

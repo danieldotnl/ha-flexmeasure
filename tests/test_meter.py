@@ -39,48 +39,64 @@ def test_heartbeat(meter: Meter):
     # should trigger start()
     fake_now = TZ.localize(datetime(2022, 1, 1, 11, 5))
     meter._template_active = True
-    meter.on_heartbeat(fake_now, 123)
-    assert meter._session_start_input_value == 123
+    meter.on_heartbeat(fake_now, 123, True)
+    assert meter._session_start_reading == 123
     assert meter._start_measured_value == 0
 
     fake_now = TZ.localize(datetime(2022, 1, 1, 11, 10))
-    meter.on_heartbeat(fake_now, 130)
+    meter.on_heartbeat(fake_now, 130, True)
     assert meter.measured_value == 7
 
-    fake_now = TZ.localize(datetime(2022, 1, 2, 11, 10))
-    meter.on_heartbeat(fake_now, 132)
+    fake_now = TZ.localize(datetime(2022, 1, 2, 11, 11))
+    meter.on_heartbeat(fake_now, 132, True)
     assert meter.measured_value == 0
     assert meter.prev_measured_value == 9
+
+    fake_now = TZ.localize(datetime(2022, 1, 2, 11, 20))
+    meter.on_heartbeat(fake_now, 140, False)
+    assert meter.measured_value == 8
+
+    fake_now = TZ.localize(datetime(2022, 1, 2, 11, 20))
+    meter.on_heartbeat(fake_now, 145, False)
+    assert meter.measured_value == 8
+
+    fake_now = TZ.localize(datetime(2022, 1, 2, 11, 20))
+    meter.on_heartbeat(fake_now, 148, True)
+    assert meter.measured_value == 8
+
+    fake_now = TZ.localize(datetime(2022, 1, 2, 11, 21))
+    meter.on_heartbeat(fake_now, 150, True)
+    assert meter.measured_value == 10
 
 
 def test_template_update(meter: Meter):
     fake_now = TZ.localize(datetime(2022, 1, 1, 11, 5))
-    meter.on_template_change(fake_now, 123, True)
+    meter.on_template_change(fake_now, 123, True, tw_active=True)
     assert meter.state == MeterState.MEASURING
 
     fake_now = TZ.localize(datetime(2022, 1, 1, 11, 6))
-    meter.on_template_change(fake_now, 125, False)
+    meter.on_template_change(fake_now, 125, False, tw_active=True)
     assert meter.state == MeterState.WAITING_FOR_TEMPLATE
     assert meter.measured_value == 2
 
     fake_now = TZ.localize(datetime(2022, 1, 1, 11, 7))
-    meter.on_template_change(fake_now, 127, True)
+    meter.on_template_change(fake_now, 127, True, tw_active=True)
     assert meter.state == MeterState.MEASURING
     assert meter.measured_value == 2
 
     fake_now = TZ.localize(datetime(2022, 1, 1, 11, 8))
-    meter.on_heartbeat(fake_now, 130)
+    meter.on_heartbeat(fake_now, 130, True)
     assert meter.state == MeterState.MEASURING
     assert meter.measured_value == 5
 
 
 def test_serializing(meter: Meter):
     fake_now = TZ.localize(datetime(2022, 1, 1, 11, 5))
-    meter.on_template_change(fake_now, 123, True)
+    meter.on_template_change(fake_now, 123, True, tw_active=True)
     assert meter.state == MeterState.MEASURING
 
     fake_now = TZ.localize(datetime(2022, 1, 1, 11, 8))
-    meter.on_heartbeat(fake_now, 130)
+    meter.on_heartbeat(fake_now, 130, True)
     assert meter.state == MeterState.MEASURING
     data = Meter.to_dict(meter)
 
@@ -89,7 +105,7 @@ def test_serializing(meter: Meter):
     assert meter2.state == MeterState.MEASURING
     assert meter2.measured_value == 7
 
-    meter2.on_template_change(fake_now, 150, False)
+    meter2.on_template_change(fake_now, 150, False, tw_active=True)
     assert meter2.state == MeterState.WAITING_FOR_TEMPLATE
     assert meter2.measured_value == 27
 
@@ -104,18 +120,18 @@ def test_serializing(meter: Meter):
 
 def test_meter_with_duration(duration_meter: Meter):
     fake_now = TZ.localize(datetime(2022, 1, 1, 11, 8))
-    duration_meter.on_template_change(fake_now, 1000, True)
+    duration_meter.on_template_change(fake_now, 1000, tp_active=True, tw_active=True)
 
     fake_now = TZ.localize(datetime(2022, 1, 2, 12, 8))
-    duration_meter.on_heartbeat(fake_now, 2000)
+    duration_meter.on_heartbeat(fake_now, 2000, True)
     assert duration_meter.state == MeterState.WAITING_FOR_PERIOD
     assert duration_meter.measured_value == 0
     assert duration_meter.prev_measured_value == 1000
 
     fake_now = TZ.localize(datetime(2022, 1, 3, 2, 8))
-    duration_meter.on_heartbeat(fake_now, 100)
+    duration_meter.on_heartbeat(fake_now, 100, True)
     assert duration_meter.state == MeterState.MEASURING
-    duration_meter.on_heartbeat(fake_now, 101)
+    duration_meter.on_heartbeat(fake_now, 101, True)
     assert duration_meter.measured_value == 1
 
 

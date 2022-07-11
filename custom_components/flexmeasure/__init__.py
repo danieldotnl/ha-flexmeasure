@@ -27,6 +27,9 @@ from .const import CONF_DURATION
 from .const import CONF_METER_TYPE
 from .const import CONF_SENSORS
 from .const import CONF_SOURCE
+from .const import CONF_TW_DAYS
+from .const import CONF_TW_FROM
+from .const import CONF_TW_TILL
 from .const import DOMAIN
 from .const import DOMAIN_DATA
 from .const import METER_TYPE_SOURCE
@@ -34,6 +37,7 @@ from .const import METER_TYPE_TIME
 from .coordinator import FlexMeasureCoordinator
 from .meter import Meter
 from .period import Period
+from .time_window import TimeWindow
 
 STORAGE_VERSION = 1
 STORAGE_KEY_TEMPLATE = "{domain}_{entry_id}"
@@ -90,6 +94,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         STORAGE_KEY_TEMPLATE.format(domain=DOMAIN, entry_id=entry.entry_id),
     )
 
+    time_window = TimeWindow(
+        entry.options[CONF_TW_DAYS],
+        entry.options[CONF_TW_FROM],
+        entry.options[CONF_TW_TILL],
+    )
+
     meters = {}
     now = dt_util.now()
 
@@ -101,7 +111,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         meters[sensor[CONF_NAME]] = Meter(f"{config_name}_{sensor[CONF_NAME]}", period)
 
     coordinator = FlexMeasureCoordinator(
-        hass, config_name, store, meters, condition, value_callback
+        hass, config_name, store, meters, condition, time_window, value_callback
     )
     await coordinator.async_init()
 

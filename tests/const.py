@@ -6,9 +6,9 @@ from custom_components.flexmeasure.const import CONF_PERIODS
 from custom_components.flexmeasure.const import CONF_SENSORS
 from custom_components.flexmeasure.const import CONF_SOURCE
 from custom_components.flexmeasure.const import CONF_TARGET
-from custom_components.flexmeasure.const import CONF_WHENDAYS
-from custom_components.flexmeasure.const import CONF_WHENFROM
-from custom_components.flexmeasure.const import CONF_WHENTILL
+from custom_components.flexmeasure.const import CONF_TW_DAYS
+from custom_components.flexmeasure.const import CONF_TW_FROM
+from custom_components.flexmeasure.const import CONF_TW_TILL
 from custom_components.flexmeasure.const import METER_TYPE_SOURCE
 from custom_components.flexmeasure.const import METER_TYPE_TIME
 from custom_components.flexmeasure.const import PREDEFINED_PERIODS
@@ -25,9 +25,9 @@ MOCK_TIME_CONFIG_FORM = {
 MOCK_TIME_CONFIG_FINAL = {
     CONF_NAME: "test_configname",
     CONF_METER_TYPE: METER_TYPE_TIME,
-    CONF_WHENDAYS: ["0", "1", "2", "3", "4", "5", "6"],
-    CONF_WHENFROM: "00:00:00",
-    CONF_WHENTILL: "20:00:00",
+    CONF_TW_DAYS: ["0", "1", "2", "3", "4", "5", "6"],
+    CONF_TW_FROM: "00:00:00",
+    CONF_TW_TILL: "20:00:00",
     CONF_SENSORS: [
         {
             CONF_NAME: "day",

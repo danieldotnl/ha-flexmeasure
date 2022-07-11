@@ -4,6 +4,7 @@ from custom_components.flexmeasure.const import DOMAIN
 from custom_components.flexmeasure.const import DOMAIN_DATA
 from custom_components.flexmeasure.coordinator import FlexMeasureCoordinator
 from custom_components.flexmeasure.meter import MeterState
+from custom_components.flexmeasure.time_window import TimeWindow
 from homeassistant.core import HomeAssistant
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
@@ -35,10 +36,11 @@ async def test_value_error(hass: HomeAssistant):
 
     value_func = Mock()
     value_func.side_effect = [234, "rubbish"]
+    time_window = TimeWindow(["0"], "00:00:00", "00:00:00")
 
     store = Mock
     coordinator = FlexMeasureCoordinator(
-        hass, "test_config", store, {"name": meter}, None, value_func
+        hass, "test_config", store, {"name": meter}, None, time_window, value_func
     )
     assert coordinator._name == "test_config"
 

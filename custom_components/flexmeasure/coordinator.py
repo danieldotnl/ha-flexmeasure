@@ -22,6 +22,7 @@ from homeassistant.helpers.storage import Store
 from homeassistant.helpers.template import Template
 
 from .meter import Meter
+from .time_window import TimeWindow
 from .util import NumberType
 
 UPDATE_INTERVAL = timedelta(minutes=1)
@@ -36,6 +37,7 @@ class FlexMeasureCoordinator:
         store: Store,
         meters: List[Meter],
         condition: Template | None,
+        time_window: TimeWindow,
         value_callback: Callable[[str], NumberType],
     ) -> None:
         self._hass: HomeAssistant = hass
@@ -45,6 +47,7 @@ class FlexMeasureCoordinator:
         self._condition: Template | None = condition
         self._get_value: Callable[[str], NumberType] = value_callback
         self._listeners: dict[CALLBACK_TYPE, tuple[CALLBACK_TYPE, object | None]] = {}
+        self._time_window: TimeWindow = time_window
         self._context = None
         self.last_reading = None
 
@@ -115,12 +118,13 @@ class FlexMeasureCoordinator:
             else:
                 return  # nothing we can do... we'll try again next time
 
+        tw_active = self._time_window.is_active(tznow)
         if template_result is not None:
             for meter in self.meters:
-                meter.on_template_change(tznow, reading, template_result)
+                meter.on_template_change(tznow, reading, template_result, tw_active)
         else:
             for meter in self.meters:
-                meter.on_heartbeat(tznow, reading)
+                meter.on_heartbeat(tznow, reading, tw_active)
 
         self._update_listeners()
         await self._async_to_storage()
