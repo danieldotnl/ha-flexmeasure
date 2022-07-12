@@ -9,6 +9,7 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.components.sensor import SensorStateClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_UNIT_OF_MEASUREMENT
 from homeassistant.const import CONF_VALUE_TEMPLATE
 from homeassistant.core import callback
 from homeassistant.core import HomeAssistant
@@ -19,6 +20,7 @@ from .const import ATTR_PREV
 from .const import ATTR_STATUS
 from .const import CONF_METER_TYPE
 from .const import CONF_SENSORS
+from .const import COORDINATOR
 from .const import DOMAIN_DATA
 from .const import ICON
 from .const import METER_TYPE_TIME
@@ -42,7 +44,7 @@ async def async_setup_entry(
         hass, config_entry.options.get(CONF_VALUE_TEMPLATE)
     )
 
-    coordinator = hass.data[DOMAIN_DATA][entry_id]
+    coordinator = hass.data[DOMAIN_DATA][entry_id][COORDINATOR]
 
     sensors: List[FlexMeasureSensor] = []
 
@@ -54,6 +56,7 @@ async def async_setup_entry(
                 meter_type,
                 sensor[CONF_NAME],
                 value_template_renderer,
+                sensor.get(CONF_UNIT_OF_MEASUREMENT),
             )
         )
 
@@ -68,6 +71,7 @@ class FlexMeasureSensor(SensorEntity):
         meter_type,
         pattern_name,
         value_template_renderer,
+        unit_of_measurement,
     ):
         self._meter_type = meter_type
         self._coordinator: FlexMeasureCoordinator = coordinator
@@ -78,6 +82,8 @@ class FlexMeasureSensor(SensorEntity):
         self._attr_extra_state_attributes = {}
         self._value_template_renderer = value_template_renderer
         self._attr_state_class = SensorStateClass.TOTAL
+        self._attr_native_unit_of_measurement = unit_of_measurement
+        self._attr_should_poll = False
 
         if self._meter_type == METER_TYPE_TIME:
             self._attr_device_class = SensorDeviceClass.DURATION

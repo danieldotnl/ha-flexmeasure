@@ -48,6 +48,8 @@ class FlexMeasureCoordinator:
         self._get_value: Callable[[str], NumberType] = value_callback
         self._listeners: dict[CALLBACK_TYPE, tuple[CALLBACK_TYPE, object | None]] = {}
         self._time_window: TimeWindow = time_window
+        self._template_listener = None
+        self._heartbeat_listener = None
         self._context = None
         self.last_reading = None
 
@@ -57,14 +59,22 @@ class FlexMeasureCoordinator:
             for meter in self.meters:
                 meter.disable_template()
 
+    async def async_stop(self):
+        _LOGGER.debug("Stop listening, template listener: %s", self._template_listener)
+        if self._template_listener:
+            self._template_listener.async_remove()
+        if self._heartbeat_listener:
+            self._heartbeat_listener()
+        _LOGGER.debug("Stop listeners")
+
     async def async_start(self):
         if self._condition:
-            result = async_track_template_result(
+            self._template_listener = async_track_template_result(
                 self._hass,
                 [TrackTemplate(self._condition, None)],
                 self._async_on_template_update,
             )
-            result.async_refresh()
+            self._template_listener.async_refresh()
 
         await self.async_on_heartbeat()
 
@@ -137,7 +147,7 @@ class FlexMeasureCoordinator:
         # minimizing the time between the point and the real activation.
         # That way we obtain a constant update frequency,
         # as long as the update process takes less than a minute
-        async_track_point_in_utc_time(
+        self._heartbeat_listener = async_track_point_in_utc_time(
             self._hass,
             self.async_on_heartbeat,
             dt_util.utcnow().replace(second=0, microsecond=0) + UPDATE_INTERVAL,

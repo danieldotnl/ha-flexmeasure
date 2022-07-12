@@ -1,5 +1,6 @@
 from unittest.mock import Mock
 
+from custom_components.flexmeasure.const import COORDINATOR
 from custom_components.flexmeasure.const import DOMAIN
 from custom_components.flexmeasure.const import DOMAIN_DATA
 from custom_components.flexmeasure.coordinator import FlexMeasureCoordinator
@@ -18,7 +19,9 @@ async def test_coordinator_happy_flow(hass: HomeAssistant):
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-    coordinator: FlexMeasureCoordinator = hass.data[DOMAIN_DATA][entry.entry_id]
+    coordinator: FlexMeasureCoordinator = hass.data[DOMAIN_DATA][entry.entry_id][
+        COORDINATOR
+    ]
 
     assert len(coordinator._meters.keys()) == 2
     assert coordinator._meters["day"].measured_value == 0

@@ -28,10 +28,12 @@ from .const import CONF_SOURCE
 from .const import CONF_TW_DAYS
 from .const import CONF_TW_FROM
 from .const import CONF_TW_TILL
+from .const import COORDINATOR
 from .const import DOMAIN
 from .const import DOMAIN_DATA
 from .const import METER_TYPE_SOURCE
 from .const import METER_TYPE_TIME
+from .const import STORE
 from .coordinator import FlexMeasureCoordinator
 from .meter import Meter
 from .period import Period
@@ -119,7 +121,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     else:
         await run_start(None)
 
-    hass.data.setdefault(DOMAIN_DATA, {})[entry.entry_id] = coordinator
+    hass.data.setdefault(DOMAIN_DATA, {})[entry.entry_id] = {
+        COORDINATOR: coordinator,
+        STORE: store,
+    }
     hass.config_entries.async_setup_platforms(entry, ([Platform.SENSOR]))
 
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
@@ -133,6 +138,9 @@ async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
+    coordinator = hass.data[DOMAIN_DATA][entry.entry_id][COORDINATOR]
+    await coordinator.async_stop()
+
     if unload_ok := await hass.config_entries.async_unload_platforms(
         entry,
         (Platform.SENSOR,),
@@ -140,3 +148,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN_DATA].pop(entry.entry_id)
 
     return unload_ok
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    pass

@@ -6,6 +6,9 @@ DOMAIN_DATA = f"{DOMAIN}_data"
 VERSION = "0.0.1"
 ATTRIBUTION = "Data provided by http://jsonplaceholder.typicode.com/"
 ISSUE_URL = "https://github.com/custom-components/ha-flexmeasure/issues"
+COORDINATOR = "coordinator"
+STORE = "store"
+
 
 # Icons
 ICON = "mdi:measure"

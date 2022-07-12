@@ -21,8 +21,8 @@ class Meter:
     def __init__(self, name: str, period: Period):
         self.name = name
         self._period = period
-        self.state: MeterState | None = None
 
+        self.state: MeterState | None = None
         self.measured_value = 0
         self.prev_measured_value = 0
         self._session_start_reading: float | None = None
