@@ -40,15 +40,18 @@ async def async_setup_entry(
     entry_id: str = config_entry.entry_id
     meter_type: str = config_entry.options[CONF_METER_TYPE]
     target_sensor_name: str = config_entry.options[CONF_NAME]
-    value_template_renderer = create_renderer(
-        hass, config_entry.options.get(CONF_VALUE_TEMPLATE)
-    )
 
     coordinator = hass.data[DOMAIN_DATA][entry_id][COORDINATOR]
 
     sensors: List[FlexMeasureSensor] = []
 
     for sensor in config_entry.options[CONF_SENSORS]:
+        value_template_renderer = None
+        if sensor.get(CONF_VALUE_TEMPLATE):
+            value_template_renderer = create_renderer(
+                hass, config_entry.options.get(CONF_VALUE_TEMPLATE)
+            )
+
         sensors.append(
             FlexMeasureSensor(
                 coordinator,
@@ -100,18 +103,25 @@ class FlexMeasureSensor(SensorEntity):
 
         measured_value = meter.measured_value
         prev_measured_value = meter.prev_measured_value
-        if self._meter_type == METER_TYPE_TIME:
-            measured_value = round(measured_value)
-            prev_measured_value = round(prev_measured_value)
-        else:
-            measured_value = round(measured_value, 2)
-            prev_measured_value = round(prev_measured_value, 2)
 
-        self._attr_native_value = self._value_template_renderer(measured_value)
-        self._attr_extra_state_attributes[ATTR_STATUS] = meter.state
-        self._attr_extra_state_attributes[ATTR_PREV] = self._value_template_renderer(
-            prev_measured_value
-        )
+        if self._value_template_renderer:
+            self._attr_native_value = self._value_template_renderer(measured_value)
+            self._attr_extra_state_attributes[ATTR_STATUS] = meter.state
+            self._attr_extra_state_attributes[
+                ATTR_PREV
+            ] = self._value_template_renderer(prev_measured_value)
+        else:
+            if self._meter_type == METER_TYPE_TIME:
+                self._attr_native_value = round(measured_value)
+                self._attr_extra_state_attributes[ATTR_STATUS] = round(
+                    prev_measured_value
+                )
+            else:
+                self._attr_native_value = round(measured_value, 2)
+                self._attr_extra_state_attributes[ATTR_STATUS] = round(
+                    prev_measured_value, 2
+                )
+
         self._attr_last_reset = meter.last_reset
         self._attr_extra_state_attributes[ATTR_NEXT_RESET] = meter.next_reset
         self.async_set_context(self._coordinator._context)

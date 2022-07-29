@@ -27,7 +27,7 @@ MOCK_TIME_CONFIG_FINAL = {
     CONF_METER_TYPE: METER_TYPE_TIME,
     CONF_TW_DAYS: ["0", "1", "2", "3", "4", "5", "6"],
     CONF_TW_FROM: "00:00:00",
-    CONF_TW_TILL: "20:00:00",
+    CONF_TW_TILL: "00:00:00",
     CONF_SENSORS: [
         {
             CONF_NAME: "day",
