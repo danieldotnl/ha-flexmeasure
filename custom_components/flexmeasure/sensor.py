@@ -49,7 +49,7 @@ async def async_setup_entry(
         value_template_renderer = None
         if sensor.get(CONF_VALUE_TEMPLATE):
             value_template_renderer = create_renderer(
-                hass, config_entry.options.get(CONF_VALUE_TEMPLATE)
+                hass, sensor.get(CONF_VALUE_TEMPLATE)
             )
 
         sensors.append(
