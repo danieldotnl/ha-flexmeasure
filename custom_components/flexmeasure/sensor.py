@@ -113,12 +113,12 @@ class FlexMeasureSensor(SensorEntity):
         else:
             if self._meter_type == METER_TYPE_TIME:
                 self._attr_native_value = round(measured_value)
-                self._attr_extra_state_attributes[ATTR_STATUS] = round(
+                self._attr_extra_state_attributes[ATTR_PREV] = round(
                     prev_measured_value
                 )
             else:
                 self._attr_native_value = round(measured_value, 2)
-                self._attr_extra_state_attributes[ATTR_STATUS] = round(
+                self._attr_extra_state_attributes[ATTR_PREV] = round(
                     prev_measured_value, 2
                 )
 
