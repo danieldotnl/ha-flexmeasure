@@ -125,7 +125,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         COORDINATOR: coordinator,
         STORE: store,
     }
-    hass.config_entries.async_setup_platforms(entry, ([Platform.SENSOR]))
+    hass.config_entries.async_forward_entry_setups(entry, ([Platform.SENSOR]))
 
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
     return True
