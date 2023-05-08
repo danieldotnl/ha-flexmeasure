@@ -66,7 +66,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     if meter_type == METER_TYPE_TIME:
         value_callback = get_time_value
     elif meter_type == METER_TYPE_SOURCE:
-
         registry = er.async_get(hass)
 
         try:
@@ -125,7 +124,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         COORDINATOR: coordinator,
         STORE: store,
     }
-    hass.config_entries.async_forward_entry_setups(entry, ([Platform.SENSOR]))
+    await hass.config_entries.async_forward_entry_setups(entry, ([Platform.SENSOR]))
 
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
     return True
